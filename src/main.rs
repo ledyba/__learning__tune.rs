@@ -46,14 +46,30 @@ fn main() -> anyhow::Result<()> {
   };
   setup_logger(log_level)?;
   let name = m.get_one::<String>("NAME").expect("[BUG] NAME is not set");
-  info!("Let's tune: {}", name);
+  info!("Let's tune: {} tuning", name);
   let tuner = tune::Tuner::new();
   match name.as_str() {
     "pythagoras" => {
-      tuner.tune::<tune::Pythagoras>(440.0);
+      let sounds = tuner.tune::<tune::Pythagoras>(440.0);
+      for (idx, _factor, hz) in &sounds {
+        info!("{}, {}", idx, hz);
+      }
+      info!("ドを基準として音名と合わせると：");
+      let names = ["ド", "ド#", "レ", "レ#", "ミ", "ファ", "ファ#", "ソ", "ソ#", "ラ", "ラ#", "シ", "ド"];
+      for ((idx, factor, _hz), name) in sounds.iter().zip(names) {
+        info!("{}, {}, {}", idx, name, factor);
+      }
     },
     "japan" => {
-      tuner.tune::<tune::Japan>(440.0);
+      let sounds = tuner.tune::<tune::Japan>(440.0);
+      for (idx, _factor, hz) in &sounds {
+        info!("{}, {}", idx, hz);
+      }
+      info!("ドを基準として音名と合わせると：");
+      let names = ["ド", "レ", "ミ", "ソ", "ラ"];
+      for ((idx, factor, _hz), name) in sounds.iter().zip(names) {
+        info!("{}, {}, {}", idx, name, factor);
+      }
     },
     name => {
       error!("Unknown name: {}", name)
