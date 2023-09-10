@@ -45,7 +45,7 @@ fn main() -> anyhow::Result<()> {
     _ => log::LevelFilter::Trace,
   };
   setup_logger(log_level)?;
-  let name = m.get_one::<String>("NAME").expect("[BUG] NAME is not set");
+  let name = m.get_one::<String>("NAME").expect("[BUG] NAME is not set").clone();
   info!("Let's tune: {} tuning", name);
   let tuner = tune::Tuner::new();
   match name.as_str() {
