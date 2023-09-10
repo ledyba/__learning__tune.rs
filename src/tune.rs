@@ -16,12 +16,12 @@ impl Tuner {
     }
   }
 
-  pub fn tune<T: Tune>(&self) {
+  pub fn tune<T: Tune>(&self, base: f64) {
     let sounds = T::generate();
-    let mut sounds = (1..sounds.len()).zip(sounds).collect::<Vec<_>>();
+    let mut sounds = (1..=sounds.len()).zip(sounds).collect::<Vec<_>>();
     sounds.sort_by(|a, b| a.1.total_cmp(&b.1));
     for (cnt, sound) in sounds {
-      println!("{}: {}", cnt, sound);
+      println!("{}: {}", cnt, sound * base);
     }
   }
 }
