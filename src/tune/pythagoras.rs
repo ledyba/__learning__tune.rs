@@ -10,7 +10,7 @@ impl super::Tune for Pythagoras {
         f = f / 2.0;
       }
       sounds.push(f);
-      f = f * 3.0;
+      f = f * 3.0 / 2.0;
       while f >= (2.0 + diff) {
         f = f / 2.0;
       }
