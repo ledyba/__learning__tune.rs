@@ -13,7 +13,6 @@ pub struct Tuner {
 impl Tuner {
   pub fn new() -> Self {
     Self {
-
     }
   }
 
