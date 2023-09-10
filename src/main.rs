@@ -1,5 +1,3 @@
-use std::process::Command;
-
 mod tune;
 
 fn app() -> clap::Command {
@@ -39,7 +37,7 @@ fn setup_logger(log_level: log::LevelFilter) -> Result<(), fern::InitError> {
   Ok(())
 }
 fn main() -> anyhow::Result<()> {
-  use log::{info, error};
+  use log::{info, warn, error};
   let m = app().get_matches();
   let log_level = match m.get_one::<u8>("verbose") {
     None | Some(0) => log::LevelFilter::Info,
@@ -47,15 +45,17 @@ fn main() -> anyhow::Result<()> {
     _ => log::LevelFilter::Trace,
   };
   setup_logger(log_level)?;
+  let name = m.get_one::<String>("NAME").expect("[BUG] NAME is not set");
+  info!("Let's tune: {}", name);
   let tuner = tune::Tuner::new();
-  match m.get_one::<String>("NAME").map(|it| it.as_str()) {
-    None | Some("pythagoras") => {
+  match name.as_str() {
+    "pythagoras" => {
+      tuner.tune::<tune::Pythagoras>(440.0);
+    },
+    "japan" => {
       tuner.tune::<tune::Japan>(440.0);
     },
-    Some("japan") => {
-      tuner.tune::<tune::Japan>(440.0);
-    },
-    Some(name) => {
+    name => {
       error!("Unknown name: {}", name)
     },
   }
