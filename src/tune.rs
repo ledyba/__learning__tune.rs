@@ -7,7 +7,6 @@ pub trait Tune {
   fn generate() -> Vec<f64>;
 }
 
-
 pub struct Tuner {
 
 }
