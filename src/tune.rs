@@ -17,7 +17,7 @@ impl Tuner {
     }
   }
 
-  pub fn tune<T: Tune>(&self, base: f64) {
+  pub fn tune<T: Tune>(&self, base: f64) -> Vec<(usize, f64)> {
     use log::info;
     let sounds = T::generate();
     let mut sounds = (1..=sounds.len()).zip(sounds).collect::<Vec<_>>();
@@ -25,5 +25,6 @@ impl Tuner {
     for (cnt, sound) in sounds {
       info!("{}: {}", cnt, sound * base);
     }
+    sounds
   }
 }
