@@ -1,5 +1,7 @@
 mod pythagoras;
 pub use pythagoras::*;
+mod japan;
+pub use japan::*;
 
 pub trait Tune {
   fn generate() -> Vec<f64>;
