@@ -1,4 +1,5 @@
 mod tune;
+mod sound;
 
 fn app() -> clap::Command {
   use clap::{Command, Arg, ArgAction, value_parser};
@@ -16,7 +17,7 @@ fn app() -> clap::Command {
       .help("tuning name")
       .index(1)
       .action(ArgAction::Set)
-      .value_parser(["pythagoras", "japan"])
+      .value_parser(["pythagoras", "lydian", "japan"])
       .required(true))
 }
 
@@ -37,6 +38,7 @@ fn setup_logger(log_level: log::LevelFilter) -> Result<(), fern::InitError> {
   Ok(())
 }
 fn main() -> anyhow::Result<()> {
+  let c5hz = 523.2511306011974;
   use log::{info, warn, error};
   let m = app().get_matches();
   let log_level = match m.get_one::<u8>("verbose") {
@@ -58,7 +60,7 @@ fn main() -> anyhow::Result<()> {
       let names = ["ド(C)", "ド#(C#)", "レ(D)", "レ#(D#)", "ミ(E)", "ファ(F)", "ファ#(F#)", "ソ(G)", "ソ#(G#)", "ラ(A)", "ラ#(A#)", "シ(B)", "ド(C)"];
       let mut sounds = sounds.iter().zip(names).map(|((a,b, c), d)| (*a, *b, *c, d)).collect::<Vec<_>>();
       for (idx, factor, _hz, name) in &sounds {
-        info!("{}, {}, {}", idx, name, factor);
+        info!("{}, {}, {}, {} [Hz]", idx, name, factor, factor * c5hz);
       }
       info!("-- order by idx --");
       sounds.sort_by_key(|(idx, _factor, _hz, _name)| *idx);
@@ -71,17 +73,22 @@ fn main() -> anyhow::Result<()> {
       for (idx, _factor, hz) in &sounds {
         info!("{}, {}", idx, hz);
       }
+      // Adjust
       info!("ドを基準として音名と合わせると：");
       let names = ["ド(C)", "ド#(C#)", "レ(D)", "レ#(D#)", "ミ(E)", "ファ(F)", "ファ#(F#)", "ソ(G)", "ソ#(G#)", "ラ(A)", "ラ#(A#)", "シ(B)", "ド(C)"];
       let mut sounds = sounds.iter().zip(names).map(|((a,b, c), d)| (*a, *b, *c, d)).collect::<Vec<_>>();
       for (idx, factor, _hz, name) in &sounds {
-        info!("{}, {}, {}", idx, name, factor);
+        info!("{}, {}, {}, {} [Hz]", idx, name, factor, factor * c5hz);
       }
       info!("-- order by idx --");
       sounds.sort_by_key(|(idx, _factor, _hz, _name)| *idx);
       for (idx, factor, _hz, name) in &sounds {
         info!("{}, {}, {}", idx, name, factor);
       }
+      // write lydian.wav
+      let mut sounds = sounds.iter().take(7).map(|(_idx, factor, _hz, _name)| *factor * c5hz).collect::<Vec<_>>();
+      sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
+      sound::output("lydian", &sounds)?;
     },
     "japan" => {
       let sounds = tuner.tune::<tune::Japan>(440.0);
