@@ -55,8 +55,31 @@ fn main() -> anyhow::Result<()> {
         info!("{}, {}", idx, hz);
       }
       info!("ドを基準として音名と合わせると：");
-      let names = ["ド", "ド#", "レ", "レ#", "ミ", "ファ", "ファ#", "ソ", "ソ#", "ラ", "ラ#", "シ", "ド"];
-      for ((idx, factor, _hz), name) in sounds.iter().zip(names) {
+      let names = ["ド(C)", "ド#(C#)", "レ(D)", "レ#(D#)", "ミ(E)", "ファ(F)", "ファ#(F#)", "ソ(G)", "ソ#(G#)", "ラ(A)", "ラ#(A#)", "シ(B)", "ド(C)"];
+      let mut sounds = sounds.iter().zip(names).map(|((a,b, c), d)| (*a, *b, *c, d)).collect::<Vec<_>>();
+      for (idx, factor, _hz, name) in &sounds {
+        info!("{}, {}, {}", idx, name, factor);
+      }
+      info!("-- order by idx --");
+      sounds.sort_by_key(|(idx, _factor, _hz, _name)| *idx);
+      for (idx, factor, _hz, name) in &sounds {
+        info!("{}, {}, {}", idx, name, factor);
+      }
+    },
+    "lydian" => {
+      let sounds = tuner.tune::<tune::Lydian>(440.0);
+      for (idx, _factor, hz) in &sounds {
+        info!("{}, {}", idx, hz);
+      }
+      info!("ドを基準として音名と合わせると：");
+      let names = ["ド(C)", "ド#(C#)", "レ(D)", "レ#(D#)", "ミ(E)", "ファ(F)", "ファ#(F#)", "ソ(G)", "ソ#(G#)", "ラ(A)", "ラ#(A#)", "シ(B)", "ド(C)"];
+      let mut sounds = sounds.iter().zip(names).map(|((a,b, c), d)| (*a, *b, *c, d)).collect::<Vec<_>>();
+      for (idx, factor, _hz, name) in &sounds {
+        info!("{}, {}, {}", idx, name, factor);
+      }
+      info!("-- order by idx --");
+      sounds.sort_by_key(|(idx, _factor, _hz, _name)| *idx);
+      for (idx, factor, _hz, name) in &sounds {
         info!("{}, {}, {}", idx, name, factor);
       }
     },

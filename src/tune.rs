@@ -1,5 +1,7 @@
 mod pythagoras;
 pub use pythagoras::*;
+mod lydian;
+pub use lydian::*;
 mod japan;
 pub use japan::*;
 
