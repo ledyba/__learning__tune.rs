@@ -100,6 +100,10 @@ fn main() -> anyhow::Result<()> {
       for ((idx, factor, _hz), name) in sounds.iter().zip(names) {
         info!("{}, {}, {}", idx, name, factor);
       }
+      // write lydian.wav
+      let mut sounds = sounds.iter().map(|(_idx, factor, _hz)| *factor * c5hz).collect::<Vec<_>>();
+      sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
+      sound::output("japan", &sounds)?;
     },
     name => {
       error!("Unknown name: {}", name)
