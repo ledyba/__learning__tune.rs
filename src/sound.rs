@@ -11,8 +11,8 @@ pub fn output(name: &str, sounds: &Vec<f64>) -> anyhow::Result<()> {
   };
   let mut writer = hound::WavWriter::create(format!("{}.wav", name), spec)?;
   let num_samples = spec.sample_rate as usize;
-  let num_samples_near_last = spec.sample_rate as usize * 9 / 10;
-  let num_samples_near_beg = spec.sample_rate as usize * 10;
+  let num_samples_near_last = num_samples * 9 / 10;
+  let num_samples_near_beg = num_samples * 10;
   let mut t = 0;
   let amplitude = i16::MAX as f64;
   let mut max = 0.0;
