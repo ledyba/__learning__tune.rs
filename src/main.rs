@@ -67,9 +67,10 @@ fn main() -> anyhow::Result<()> {
       for (idx, factor, name) in &sounds {
         info!("{}, {}, {}", idx, name, factor);
       }
-      sounds.sort_by(|a, b| a.2.partial_cmp(&b.2).unwrap());
+      sounds.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
       let sounds = tune::rotate(&sounds, 1);
-      let mut sounds = sounds.iter().map(|(_idx, factor, _name)| *factor * c5hz).collect::<Vec<_>>();
+      let first = sounds[0].1;
+      let mut sounds = sounds.iter().map(|(_idx, factor, _name)| (*factor/first) * c5hz).collect::<Vec<_>>();
       sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
       sound::output("pythagoras", &sounds)?;
     },

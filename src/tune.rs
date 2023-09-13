@@ -31,7 +31,7 @@ impl Tuner {
 
 pub fn rotate<T: Default + Clone + Sized>(v: &Vec<T>, n: usize) -> Vec<T> {
   let (a, b) = v.split_at(n);
-  let mut a = Vec::from(a);
-  a.append(&mut Vec::from(b).iter().map(|it| it.clone()).collect());
-  a
+  let mut b = Vec::from(b);
+  b.append(&mut Vec::from(a).iter().map(|it| it.clone()).collect());
+  b
 }
