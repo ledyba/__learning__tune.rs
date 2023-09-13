@@ -56,18 +56,20 @@ fn main() -> anyhow::Result<()> {
       for (idx, _factor, hz) in &sounds {
         info!("{}, {}", idx, hz);
       }
-      info!("レ(D)を基準として音名と合わせると：");
-      let names = ["レ(D)", "ミ(E)", "ファ(F)", "ソ(G)", "ラ(A)", "シ(B)", "ド(C)"];
-      let mut sounds = sounds.iter().zip(names).map(|((a,b, c), d)| (*a, *b, *c, d)).collect::<Vec<_>>();
-      for (idx, factor, _hz, name) in &sounds {
+      info!("ド(C)を基準として音名と合わせると：");
+      let names = ["ド(C)", "レ(D)", "ミ(E)", "ファ(F)", "ソ(G)", "ラ(A)", "シ(B)"];
+      let mut sounds = sounds.iter().zip(names).map(|((a,b, c), d)| (*a, *b, d)).collect::<Vec<_>>();
+      for (idx, factor, name) in &sounds {
         info!("{}, {}, {}, {} [Hz]", idx, name, factor, factor * c5hz);
       }
       info!("-- order by idx --");
-      sounds.sort_by_key(|(idx, _factor, _hz, _name)| *idx);
-      for (idx, factor, _hz, name) in &sounds {
+      sounds.sort_by_key(|(idx, _factor, _name)| *idx);
+      for (idx, factor, name) in &sounds {
         info!("{}, {}, {}", idx, name, factor);
       }
-      let mut sounds = sounds.iter().map(|(_idx, factor, _hz, _name)| *factor * c5hz).collect::<Vec<_>>();
+      sounds.sort_by(|a, b| a.2.partial_cmp(&b.2).unwrap());
+      let sounds = tune::rotate(&sounds, 1);
+      let mut sounds = sounds.iter().map(|(_idx, factor, _name)| *factor * c5hz).collect::<Vec<_>>();
       sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
       sound::output("pythagoras", &sounds)?;
     },
