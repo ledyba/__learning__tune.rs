@@ -56,8 +56,8 @@ fn main() -> anyhow::Result<()> {
       for (idx, _factor, hz) in &sounds {
         info!("{}, {}", idx, hz);
       }
-      info!("ドを基準として音名と合わせると：");
-      let names = ["ド(C)", "ド#(C#)", "レ(D)", "レ#(D#)", "ミ(E)", "ファ(F)", "ファ#(F#)", "ソ(G)", "ソ#(G#)", "ラ(A)", "ラ#(A#)", "シ(B)", "ド(C)"];
+      info!("レ(D)を基準として音名と合わせると：");
+      let names = ["レ(D)", "ミ(E)", "ファ(F)", "ソ(G)", "ラ(A)", "シ(B)", "ド(C)"];
       let mut sounds = sounds.iter().zip(names).map(|((a,b, c), d)| (*a, *b, *c, d)).collect::<Vec<_>>();
       for (idx, factor, _hz, name) in &sounds {
         info!("{}, {}, {}, {} [Hz]", idx, name, factor, factor * c5hz);
@@ -67,6 +67,9 @@ fn main() -> anyhow::Result<()> {
       for (idx, factor, _hz, name) in &sounds {
         info!("{}, {}, {}", idx, name, factor);
       }
+      let mut sounds = sounds.iter().map(|(_idx, factor, _hz, _name)| *factor * c5hz).collect::<Vec<_>>();
+      sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
+      sound::output("pythagoras", &sounds)?;
     },
     "lydian" => {
       let sounds = tuner.tune::<tune::Lydian>(440.0);
