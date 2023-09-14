@@ -56,33 +56,34 @@ fn main() -> anyhow::Result<()> {
       for (idx, _factor, hz) in &sounds {
         info!("{}, {}", idx, hz);
       }
-      info!("-- order by idx --");
+      info!("-- original order --");
+      // http://www15.plala.or.jp/gundog/homepage/densi/onkai/onkai.html
       info!("レ(D)を基準として音名と合わせると：");
       sounds.sort_by_key(|(idx, _factor, _name)| *idx);
-      let names = ["レ(D)", "ミ(E)", "ファ(F)", "ソ(G)", "ラ(A)", "シ(B)", "ド(C)"];
+      let names = ["ファ(F)", "ソ(G)", "ラ(A)", "シ(B)", "ド(C)", "レ(D)", "ミ(E)"];
       let mut sounds = sounds.iter().zip(names).map(|((a,b, c), d)| (*a, *b, d)).collect::<Vec<_>>();
       for (idx, factor, name) in &sounds {
         info!("{}, {}, {}, {} [Hz]", idx, name, factor, factor * c5hz);
       }
-      sounds[sounds.len() - 1].1 *= 2.0;
+      sounds[4].1 /= 4.0;
+      sounds[5].1 /= 4.0;
+      sounds[6].1 /= 4.0;
       info!("-- re-order --");
       sounds.sort_by(|(_idx1, factor1, _name1), (_idx2, factor2, _name2)| factor1.partial_cmp(factor2).unwrap());
-      let sounds = tune::rotate(&sounds, 6);
-      for (idx, factor, name) in &sounds {
-        info!("{}, {}, {}", idx, name, factor);
-      }
       let first = sounds[0].1;
       let sounds = sounds.iter().map(|(idx, factor, name)| {
         let mut factor = *factor / first;
         while  factor < 1.0 {
           factor *= 2.0;
         }
-        while factor > 2.0 {
+        while factor >= 2.0 {
           factor /= 2.0;
         }
-        (*idx, factor / first, *name)
+        (*idx, factor, *name)
       }).collect::<Vec<_>>();
-      let first = sounds[0].1;
+      for (idx, factor, name) in &sounds {
+        info!("{}, {}, {}, {} [Hz]", idx, name, factor, factor * c5hz);
+      }
       let mut sounds = sounds.iter().map(|(_idx, factor, _name)| *factor * c5hz).collect::<Vec<_>>();
       sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
       sound::output("pythagoras", &sounds)?;

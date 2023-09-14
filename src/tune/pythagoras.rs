@@ -6,7 +6,7 @@ impl super::Tune for Pythagoras {
     let factors = [0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0];
     let sounds = factors.iter().map(|f| (1.5_f64).powf(*f)).collect::<Vec<_>>();
     let base = *sounds.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-    sounds
+    let mut sounds = sounds
       .iter()
       .map(|f| f / base)
       .map(|f| {
@@ -16,6 +16,8 @@ impl super::Tune for Pythagoras {
         }
         f
       })
-      .collect()
+      .collect::<Vec<_>>();
+    sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sounds
   }
 }
