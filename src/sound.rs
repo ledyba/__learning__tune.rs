@@ -1,6 +1,5 @@
 use hound;
 use std::f64::consts::PI;
-use log::info;
 
 pub fn output(name: &str, sounds: &Vec<f64>) -> anyhow::Result<()> {
   let spec = hound::WavSpec {
