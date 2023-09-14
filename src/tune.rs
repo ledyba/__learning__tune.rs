@@ -28,22 +28,3 @@ impl Tuner {
     }).collect::<Vec<_>>()
   }
 }
-
-pub fn rotate<T: Default + Clone + Sized>(v: &Vec<T>, n: usize) -> Vec<T> {
-  let (a, b) = v.split_at(n);
-  let mut b = Vec::from(b);
-  b.append(&mut Vec::from(a).iter().map(|it| it.clone()).collect());
-  b
-}
-
-#[cfg(test)]
-mod test {
-  #[test]
-  fn rotate() {
-    let v = Vec::from([1,2,3]);
-    let v = super::rotate(&v, 2);
-    assert_eq!(v[0], 3);
-    assert_eq!(v[1], 1);
-    assert_eq!(v[2], 2);
-  }
-}
