@@ -21,12 +21,12 @@ impl Tuner {
     }
   }
 
-  pub fn tune<T: Tune>(&self, base: f64) -> Vec<(usize, f64, f64)> {
+  pub fn tune<T: Tune>(&self) -> Vec<(usize, f64)> {
     let sounds = T::generate();
     let mut sounds = (1..=sounds.len()).zip(sounds).collect::<Vec<_>>();
     sounds.sort_by(|a, b| a.1.total_cmp(&b.1));
     sounds.iter().map(|(cnt, factor)| {
-      (*cnt, *factor, *factor * base)
+      (*cnt, *factor)
     }).collect::<Vec<_>>()
   }
 }

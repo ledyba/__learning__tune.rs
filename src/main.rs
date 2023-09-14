@@ -52,16 +52,16 @@ fn main() -> anyhow::Result<()> {
   let tuner = tune::Tuner::new();
   match name.as_str() {
     "pythagoras" => {
-      let mut sounds = tuner.tune::<tune::Pythagoras>(440.0);
-      for (idx, _factor, hz) in &sounds {
-        info!("{}, {}", idx, hz);
+      let mut sounds = tuner.tune::<tune::Pythagoras>();
+      for (idx, factor) in &sounds {
+        info!("{}, {}", idx, factor * c5hz);
       }
       info!("-- original order --");
       // http://www15.plala.or.jp/gundog/homepage/densi/onkai/onkai.html
       info!("レ(D)を基準として音名と合わせると：");
-      sounds.sort_by_key(|(idx, _factor, _name)| *idx);
+      sounds.sort_by_key(|(idx, _factor)| *idx);
       let names = ["ファ(F)", "ソ(G)", "ラ(A)", "シ(B)", "ド(C)", "レ(D)", "ミ(E)"];
-      let mut sounds = sounds.iter().zip(names).map(|((a,b, _c), d)| (*a, *b, d)).collect::<Vec<_>>();
+      let mut sounds = sounds.iter().zip(names).map(|((a,b), c)| (*a, *b, c)).collect::<Vec<_>>();
       for (idx, factor, name) in &sounds {
         info!("{}, {}, {}, {} [Hz]", idx, name, factor, factor * c5hz);
       }
@@ -89,52 +89,52 @@ fn main() -> anyhow::Result<()> {
       sound::output("pythagoras", &sounds)?;
     },
     "lydian" => {
-      let sounds = tuner.tune::<tune::Lydian>(440.0);
-      for (idx, _factor, hz) in &sounds {
-        info!("{}, {}", idx, hz);
+      let sounds = tuner.tune::<tune::Lydian>();
+      for (idx, factor) in &sounds {
+        info!("{}, {}", idx, factor * c5hz);
       }
       // Adjust
       info!("ドを基準として音名と合わせると：");
       let names = ["ド(C)", "ド#(C#)", "レ(D)", "レ#(D#)", "ミ(E)", "ファ(F)", "ファ#(F#)", "ソ(G)", "ソ#(G#)", "ラ(A)", "ラ#(A#)", "シ(B)", "ド(C)"];
-      let mut sounds = sounds.iter().zip(names).map(|((a,b, c), d)| (*a, *b, *c, d)).collect::<Vec<_>>();
-      for (idx, factor, _hz, name) in &sounds {
+      let mut sounds = sounds.iter().zip(names).map(|((a, b), d)| (*a, *b, d)).collect::<Vec<_>>();
+      for (idx, factor, name) in &sounds {
         info!("{}, {}, {}, {} [Hz]", idx, name, factor, factor * c5hz);
       }
       info!("-- order by idx --");
-      sounds.sort_by_key(|(idx, _factor, _hz, _name)| *idx);
-      for (idx, factor, _hz, name) in &sounds {
+      sounds.sort_by_key(|(idx, _factor, _name)| *idx);
+      for (idx, factor, name) in &sounds {
         info!("{}, {}, {}", idx, name, factor);
       }
       // write lydian.wav
-      let mut sounds = sounds.iter().take(7).map(|(_idx, factor, _hz, _name)| *factor * c5hz).collect::<Vec<_>>();
+      let mut sounds = sounds.iter().take(7).map(|(_idx, factor, _name)| *factor * c5hz).collect::<Vec<_>>();
       sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
       sound::output("lydian", &sounds)?;
     },
     "just" => {
-      let sounds = tuner.tune::<tune::Just>(440.0);
-      for (idx, _factor, hz) in &sounds {
-        info!("{}, {}", idx, hz);
+      let sounds = tuner.tune::<tune::Just>();
+      for (idx, factor) in &sounds {
+        info!("{}, {}", idx, factor * c5hz);
       }
       info!("ドを基準として音名と合わせると：");
       let names = ["ド(A)", "レ(D)", "ミ(E)", "ファ(F)", "ソ(G)", "ラ(A)", "シ(B)"];
-      for ((idx, factor, _hz), name) in sounds.iter().zip(names) {
+      for ((idx, factor), name) in sounds.iter().zip(names) {
         info!("{}, {}, {}", idx, name, factor);
       }
-      let sounds = sounds.iter().map(|(_idx, factor, _hz)| *factor * c5hz).collect::<Vec<_>>();
+      let sounds = sounds.iter().map(|(_idx, factor)| *factor * c5hz).collect::<Vec<_>>();
       sound::output("just", &sounds)?;
     },
     "japan" => {
-      let sounds = tuner.tune::<tune::Japan>(440.0);
-      for (idx, _factor, hz) in &sounds {
-        info!("{}, {}", idx, hz);
+      let sounds = tuner.tune::<tune::Japan>();
+      for (idx, factor) in &sounds {
+        info!("{}, {}", idx, factor * c5hz);
       }
       info!("ドを基準として音名と合わせると：");
       let names = ["ド(A)", "レ(D)", "ミ(E)", "ソ(G)", "ラ(A)"];
-      for ((idx, factor, _hz), name) in sounds.iter().zip(names) {
+      for ((idx, factor), name) in sounds.iter().zip(names) {
         info!("{}, {}, {}", idx, name, factor);
       }
       // write lydian.wav
-      let mut sounds = sounds.iter().map(|(_idx, factor, _hz)| *factor * c5hz).collect::<Vec<_>>();
+      let mut sounds = sounds.iter().map(|(_idx, factor)| *factor * c5hz).collect::<Vec<_>>();
       sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
       sound::output("japan", &sounds)?;
     },
