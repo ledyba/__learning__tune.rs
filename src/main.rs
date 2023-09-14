@@ -61,7 +61,7 @@ fn main() -> anyhow::Result<()> {
       info!("レ(D)を基準として音名と合わせると：");
       sounds.sort_by_key(|(idx, _factor, _name)| *idx);
       let names = ["ファ(F)", "ソ(G)", "ラ(A)", "シ(B)", "ド(C)", "レ(D)", "ミ(E)"];
-      let mut sounds = sounds.iter().zip(names).map(|((a,b, c), d)| (*a, *b, d)).collect::<Vec<_>>();
+      let mut sounds = sounds.iter().zip(names).map(|((a,b, _c), d)| (*a, *b, d)).collect::<Vec<_>>();
       for (idx, factor, name) in &sounds {
         info!("{}, {}, {}, {} [Hz]", idx, name, factor, factor * c5hz);
       }
