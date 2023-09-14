@@ -17,7 +17,7 @@ fn app() -> clap::Command {
       .help("tuning name")
       .index(1)
       .action(ArgAction::Set)
-      .value_parser(["pythagoras", "lydian", "japan"])
+      .value_parser(["pythagoras", "lydian", "just", "japan"])
       .required(true))
 }
 
@@ -39,7 +39,7 @@ fn setup_logger(log_level: log::LevelFilter) -> Result<(), fern::InitError> {
 }
 fn main() -> anyhow::Result<()> {
   let c5hz = 523.2511306011974;
-  use log::{info, warn, error};
+  use log::{info, error};
   let m = app().get_matches();
   let log_level = match m.get_one::<u8>("verbose") {
     None | Some(0) => log::LevelFilter::Info,
@@ -110,13 +110,26 @@ fn main() -> anyhow::Result<()> {
       sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
       sound::output("lydian", &sounds)?;
     },
+    "just" => {
+      let sounds = tuner.tune::<tune::Just>(440.0);
+      for (idx, _factor, hz) in &sounds {
+        info!("{}, {}", idx, hz);
+      }
+      info!("ドを基準として音名と合わせると：");
+      let names = ["ド(A)", "レ(D)", "ミ(E)", "ファ(F)", "ソ(G)", "ラ(A)", "シ(B)"];
+      for ((idx, factor, _hz), name) in sounds.iter().zip(names) {
+        info!("{}, {}, {}", idx, name, factor);
+      }
+      let sounds = sounds.iter().map(|(_idx, factor, _hz)| *factor * c5hz).collect::<Vec<_>>();
+      sound::output("just", &sounds)?;
+    },
     "japan" => {
       let sounds = tuner.tune::<tune::Japan>(440.0);
       for (idx, _factor, hz) in &sounds {
         info!("{}, {}", idx, hz);
       }
       info!("ドを基準として音名と合わせると：");
-      let names = ["ド", "レ", "ミ", "ソ", "ラ"];
+      let names = ["ド(A)", "レ(D)", "ミ(E)", "ソ(G)", "ラ(A)"];
       for ((idx, factor, _hz), name) in sounds.iter().zip(names) {
         info!("{}, {}, {}", idx, name, factor);
       }

@@ -4,6 +4,8 @@ mod lydian;
 pub use lydian::*;
 mod japan;
 pub use japan::*;
+mod just;
+pub use just::*;
 
 pub trait Tune {
   fn generate() -> Vec<f64>;
