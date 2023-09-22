@@ -1,5 +1,4 @@
 mod tune;
-mod sound;
 mod cmd;
 
 fn app() -> clap::Command {
