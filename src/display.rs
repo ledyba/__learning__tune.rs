@@ -1,14 +1,14 @@
 use anyhow::anyhow;
 use log::info;
+use crate::tune::Tuner;
 
 pub fn display(tune_name: &str) -> anyhow::Result<()> {
   let c5hz = 523.2511306011974;
-  use crate::{tune, sound};
+  use crate::{tune, sound, tune::Tuner};
   info!("Let's display tune: {} tuning", tune_name);
-  let tuner = tune::Tuner::new();
   match tune_name {
     "pythagoras" => {
-      let mut sounds = tuner.tune::<tune::Pythagoras>();
+      let mut sounds = Tuner::<tune::Pythagoras>::new().tune();
       for (idx, factor) in &sounds {
         info!("{}, {}", idx, factor * c5hz);
       }
@@ -45,7 +45,7 @@ pub fn display(tune_name: &str) -> anyhow::Result<()> {
       sound::output(tune_name, &sounds)?;
     },
     "lydian" => {
-      let sounds = tuner.tune::<tune::Lydian>();
+      let sounds = Tuner::<tune::Lydian>::new();
       for (idx, factor) in &sounds {
         info!("{}, {}", idx, factor * c5hz);
       }
@@ -67,7 +67,7 @@ pub fn display(tune_name: &str) -> anyhow::Result<()> {
       sound::output(tune_name, &sounds)?;
     },
     "just" => {
-      let sounds = tuner.tune::<tune::Just>();
+      let sounds = Tuner::<tune::Just>::new().tune();
       for (idx, factor) in &sounds {
         info!("{}, {}", idx, factor * c5hz);
       }
@@ -80,7 +80,7 @@ pub fn display(tune_name: &str) -> anyhow::Result<()> {
       sound::output("just", &sounds)?;
     },
     "japan" => {
-      let sounds = tuner.tune::<tune::Japan>();
+      let sounds = Tuner::<tune::Japan>::new().tune();
       for (idx, factor) in &sounds {
         info!("{}, {}", idx, factor * c5hz);
       }
