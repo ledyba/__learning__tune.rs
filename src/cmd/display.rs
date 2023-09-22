@@ -1,6 +1,4 @@
-use anyhow::anyhow;
 use log::info;
-use crate::tune::Tuner;
 
 pub fn display(tune_name: &str) -> anyhow::Result<()> {
   let c5hz = 523.2511306011974;
@@ -102,7 +100,6 @@ pub fn display(tune_name: &str) -> anyhow::Result<()> {
   Ok(())
 }
 pub fn output(name: &str, sounds: &Vec<f64>) -> anyhow::Result<()> {
-  use hound;
   use std::f64::consts::PI;
 
   let spec = hound::WavSpec {
