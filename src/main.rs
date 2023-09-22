@@ -67,7 +67,7 @@ fn main() -> anyhow::Result<()> {
   let (cmd, m) = m.subcommand().expect("No subcommand!");
   match cmd {
     "display" => {
-      let tune_name = m.get_one::<String>("NAME").expect("[BUG] --tune is not set").clone();
+      let tune_name = m.get_one::<String>("NAME").expect("[BUG] NAME is not set").clone();
       cmd::display::display(&tune_name)
     },
     "play" => {
