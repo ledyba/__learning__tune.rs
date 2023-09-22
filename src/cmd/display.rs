@@ -4,7 +4,7 @@ use crate::tune::Tuner;
 
 pub fn display(tune_name: &str) -> anyhow::Result<()> {
   let c5hz = 523.2511306011974;
-  use crate::{tune, sound, tune::Tuner};
+  use crate::{tune, tune::Tuner};
   info!("Let's display tune: {} tuning", tune_name);
   match tune_name {
     "pythagoras" => {
@@ -42,7 +42,7 @@ pub fn display(tune_name: &str) -> anyhow::Result<()> {
       }
       let mut sounds = sounds.iter().map(|(_idx, factor, _name)| *factor * c5hz).collect::<Vec<_>>();
       sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
-      sound::output(tune_name, &sounds)?;
+      output(tune_name, &sounds)?;
     },
     "lydian" => {
       let sounds = Tuner::<tune::Lydian>::new().tune();
@@ -64,7 +64,7 @@ pub fn display(tune_name: &str) -> anyhow::Result<()> {
       // write lydian.wav
       let mut sounds = sounds.iter().take(7).map(|(_idx, factor, _name)| *factor * c5hz).collect::<Vec<_>>();
       sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
-      sound::output(tune_name, &sounds)?;
+      output(tune_name, &sounds)?;
     },
     "just" => {
       let sounds = Tuner::<tune::Just>::new().tune();
@@ -77,7 +77,7 @@ pub fn display(tune_name: &str) -> anyhow::Result<()> {
         info!("{}, {}, {}", idx, name, factor);
       }
       let sounds = sounds.iter().map(|(_idx, factor)| *factor * c5hz).collect::<Vec<_>>();
-      sound::output("just", &sounds)?;
+      output("just", &sounds)?;
     },
     "japan" => {
       let sounds = Tuner::<tune::Japan>::new().tune();
@@ -92,12 +92,47 @@ pub fn display(tune_name: &str) -> anyhow::Result<()> {
       // write lydian.wav
       let mut sounds = sounds.iter().map(|(_idx, factor)| *factor * c5hz).collect::<Vec<_>>();
       sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
-      sound::output(tune_name, &sounds)?;
+      output(tune_name, &sounds)?;
     },
     name => {
       let msg = format!("Unknown name: {}", name);
       return Err(anyhow::Error::msg(msg));
     },
+  }
+  Ok(())
+}
+pub fn output(name: &str, sounds: &Vec<f64>) -> anyhow::Result<()> {
+  use hound;
+  use std::f64::consts::PI;
+
+  let spec = hound::WavSpec {
+    channels: 1,
+    sample_rate: 44100,
+    bits_per_sample: 16,
+    sample_format: hound::SampleFormat::Int,
+  };
+  let mut writer = hound::WavWriter::create(format!("{}.wav", name), spec)?;
+  let num_samples = spec.sample_rate as usize;
+  let num_samples_near_last = num_samples * 9 / 10;
+  let num_samples_near_beg = num_samples * 10;
+  let mut t = 0;
+  let amplitude = i16::MAX as f64;
+  let mut max = 0.0;
+  let mut min = 0.0;
+  for hz in sounds {
+    for dt in 0..num_samples {
+      let x = (t + dt) as f64 / (spec.sample_rate as f64);
+      let sample = (x * hz * 2.0 * PI).sin();
+      let sample = if (dt <= num_samples_near_beg || num_samples_near_last <= dt) && sample.abs() < 0.01 {
+        0.0
+      } else {
+        sample
+      };
+      max = sample.max(max);
+      min = sample.min(min);
+      writer.write_sample((sample * amplitude) as i16)?;
+    }
+    t += num_samples;
   }
   Ok(())
 }
