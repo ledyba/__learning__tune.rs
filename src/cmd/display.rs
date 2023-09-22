@@ -45,7 +45,7 @@ pub fn display(tune_name: &str) -> anyhow::Result<()> {
       sound::output(tune_name, &sounds)?;
     },
     "lydian" => {
-      let sounds = Tuner::<tune::Lydian>::new();
+      let sounds = Tuner::<tune::Lydian>::new().tune();
       for (idx, factor) in &sounds {
         info!("{}, {}", idx, factor * c5hz);
       }
