@@ -68,7 +68,7 @@ fn main() -> anyhow::Result<()> {
   match cmd {
     "display" => {
       let tune_name = m.get_one::<String>("NAME").expect("[BUG] --tune is not set").clone();
-      return cmd::display::display(&tune_name);
+      cmd::display::display(&tune_name)
     },
     "play" => {
       let file_name = m.get_one::<String>("NAME").expect("[BUG] NAME is not set").clone();
@@ -85,10 +85,10 @@ fn main() -> anyhow::Result<()> {
         }
         mid
       };
+      Ok(())
     },
     sub_cmd => {
-      return Err(anyhow::Error::msg(format!("Unknown subcommand: {}", sub_cmd)))
+      Err(anyhow::Error::msg(format!("Unknown subcommand: {}", sub_cmd)))
     }
   }
-  Ok(())
 }
