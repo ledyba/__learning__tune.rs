@@ -14,6 +14,7 @@ fn app() -> clap::Command {
       .action(ArgAction::Count)
       .value_parser(value_parser!(u8))
       .help("Show verbose message"))
+    .subcommand_required(true)
     .subcommand(Command::new("display")
       .about("Display about tune")
       .arg(Arg::new("NAME")
