@@ -110,17 +110,25 @@ pub fn output(name: &str, sounds: &Vec<f64>) -> anyhow::Result<()> {
   };
   let mut writer = hound::WavWriter::create(format!("{}.wav", name), spec)?;
   let num_samples = spec.sample_rate as usize;
-  let num_samples_near_last = num_samples * 9 / 10;
-  let num_samples_near_beg = num_samples * 10;
+  let num_samples_near_last = num_samples * 99 / 100;
+  let num_samples_near_beg = num_samples * 1 / 100;
   let mut t = 0;
   let amplitude = i16::MAX as f64;
   let mut max = 0.0;
   let mut min = 0.0;
+  let mut silent = true;
   for hz in sounds {
     for dt in 0..num_samples {
       let x = (t + dt) as f64 / (spec.sample_rate as f64);
       let sample = (x * hz * 2.0 * PI).sin();
-      let sample = if (dt <= num_samples_near_beg || num_samples_near_last <= dt) && sample.abs() < 0.01 {
+      if dt <= num_samples_near_beg {
+        silent = true;
+      }else if !silent && num_samples_near_last <= dt && sample.abs() < 0.01 {
+        silent = true;
+      }else if silent && (num_samples_near_beg <= dt && dt <= num_samples_near_last) && sample.abs() >= 0.01 {
+        silent = false;
+      }
+      let sample = if silent {
         0.0
       } else {
         sample
