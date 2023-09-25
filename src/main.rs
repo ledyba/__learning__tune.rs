@@ -25,7 +25,7 @@ fn app() -> clap::Command {
         .required(true)))
     .subcommand(Command::new("play")
       .arg(Arg::new("tune")
-        .help("tuning name")
+        .help("tune name")
         .action(ArgAction::Set)
         .long("tune")
         .short('t')
