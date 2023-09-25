@@ -30,7 +30,7 @@ fn app() -> clap::Command {
         .long("tune")
         .short('t')
         .value_parser(tunes))
-      .arg(Arg::new("NAME")
+      .arg(Arg::new("FILENAME")
         .help("midi file name")
         .index(1)
         .action(ArgAction::Set)
@@ -71,7 +71,7 @@ fn main() -> anyhow::Result<()> {
       cmd::display::display(&tune_name)
     },
     "play" => {
-      let file_name = m.get_one::<String>("NAME").expect("[BUG] NAME is not set").clone();
+      let file_name = m.get_one::<String>("FILENAME").expect("[BUG] FILENAME is not set").clone();
       let tune_name = m.get_one::<String>("tune").expect("[BUG] --tune is not set").clone();
       let file_bytes = std::fs::read(&file_name)?;
       let mid = {
