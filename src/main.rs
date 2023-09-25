@@ -31,7 +31,7 @@ fn app() -> clap::Command {
         .short('t')
         .value_parser(tunes))
       .arg(Arg::new("NAME")
-        .help("tuning name")
+        .help("midi file name")
         .index(1)
         .action(ArgAction::Set)
         .default_value("sample/serenade_525_1_(c)ishii.mid")
