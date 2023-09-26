@@ -39,8 +39,7 @@ fn app() -> clap::Command {
 }
 
 fn setup_logger(log_level: log::LevelFilter) -> Result<(), fern::InitError> {
-  use fern::Dispatch;
-  Dispatch::new()
+  fern::Dispatch::new()
     .format(|out, message, record| {
       out.finish(format_args!(
         "{}[{}] {}",
