@@ -3,7 +3,8 @@ mod cmd;
 
 fn app() -> clap::Command {
   use clap::{Command, Arg, ArgAction, value_parser};
-  let tunes = ["average", "pythagoras", "lydian", "just", "japan"];
+  let play_tunes = ["average", "pythagoras", "lydian", "just", "japan"];
+  let display_tunes = ["average", "pythagoras", "lydian", "just", "japan"];
   Command::new("tune")
     .author("Kaede Fujisaki")
     .about("Tune")
@@ -21,7 +22,7 @@ fn app() -> clap::Command {
         .help("tuning name")
         .action(ArgAction::Set)
         .index(1)
-        .value_parser(tunes)
+        .value_parser(display_tunes)
         .required(true)))
     .subcommand(Command::new("play")
       .arg(Arg::new("tune")
@@ -29,7 +30,7 @@ fn app() -> clap::Command {
         .action(ArgAction::Set)
         .long("tune")
         .short('t')
-        .value_parser(tunes))
+        .value_parser(play_tunes))
       .arg(Arg::new("FILENAME")
         .help("midi file name")
         .index(1)
