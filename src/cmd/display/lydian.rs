@@ -1,5 +1,5 @@
 use log::info;
-use super::C4HZ;
+use super::{C4HZ, output};
 
 fn gen() -> Vec<f64> {
   let diff = 0.1;
@@ -40,6 +40,6 @@ pub fn run() -> anyhow::Result<()> {
   // write lydian.wav
   let mut sounds = sounds.iter().take(7).map(|(_idx, factor, _name)| *factor * C4HZ).collect::<Vec<_>>();
   sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
-  super::output("lydian", &sounds)?;
+  output("lydian", &sounds)?;
   Ok(())
 }

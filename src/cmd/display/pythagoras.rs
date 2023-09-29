@@ -1,5 +1,5 @@
 use log::info;
-use crate::cmd::display::C4HZ;
+use super::{C4HZ, output};
 
 fn gen() -> Vec<f64> {
   // https://ja.wikipedia.org/wiki/%E3%83%94%E3%82%BF%E3%82%B4%E3%83%A9%E3%82%B9%E9%9F%B3%E5%BE%8B#%E6%96%B9%E6%B3%95
@@ -56,6 +56,6 @@ pub fn run() -> anyhow::Result<()> {
   }
   let mut sounds = sounds.iter().map(|(_idx, factor, _name)| *factor * C4HZ).collect::<Vec<_>>();
   sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
-  super::output("pythagoras", &sounds)?;
+  output("pythagoras", &sounds)?;
   Ok(())
 }

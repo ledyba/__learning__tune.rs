@@ -1,5 +1,5 @@
 use log::info;
-use super::C4HZ;
+use super::{C4HZ, output};
 
 fn gen() -> Vec<f64> {
   // https://ja.wikipedia.org/wiki/%E7%B4%94%E6%AD%A3%E5%BE%8B
@@ -19,6 +19,6 @@ pub fn run() -> anyhow::Result<()> {
     info!("{}, {}, {}", idx, name, factor);
   }
   let sounds = sounds.iter().map(|(_idx, factor)| *factor * C4HZ).collect::<Vec<_>>();
-  super::output("just", &sounds)?;
+  output("just", &sounds)?;
   Ok(())
 }
