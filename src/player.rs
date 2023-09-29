@@ -2,7 +2,7 @@
 /// Tuner maps midi key into frequency.
 ///
 pub trait Tuner {
-  fn freq(&self) -> f64;
+  fn freq(&self, code: u8) -> f64;
 }
 /// A4 midi code
 pub const A4: u8 = 69;
