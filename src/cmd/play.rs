@@ -1,6 +1,12 @@
 use log::{debug, info};
 
-pub const TUNES: [&'static str; 5] = ["average", "pythagoras", "lydian", "just", "japan"];
+pub const TUNES: [&'static str; 5] = [
+  "average",
+  "pythagoras",
+  "lydian",
+  "just",
+  "japan",
+];
 
 pub fn run(tune_name: &str, file_name: &str) -> anyhow::Result<()> {
   let file_bytes = std::fs::read(&file_name)?;
