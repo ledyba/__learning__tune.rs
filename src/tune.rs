@@ -1,17 +1,3 @@
-mod average;
-pub use average::*;
-mod pythagoras;
-pub use pythagoras::*;
-mod lydian;
-pub use lydian::*;
-mod japan;
-pub use japan::*;
-mod just;
-pub use just::*;
-
-mod meantone;
-pub use meantone::*;
-
 pub trait Tune {
   fn generate() -> Vec<f64>;
 }

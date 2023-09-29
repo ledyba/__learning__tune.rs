@@ -1,104 +1,34 @@
 use log::info;
 
-pub fn display(tune_name: &str) -> anyhow::Result<()> {
-  // (2 ** (1/12)) ** -9 * 440.0
-  let c4hz = 261.6255653005985;
-  use crate::{tune, tune::Tuner};
+mod average;
+mod pythagoras;
+mod lydian;
+mod japan;
+mod just;
+mod meantone;
+
+pub const TUNES: [&'static str; 5] = [
+  "average",
+  "pythagoras",
+  "lydian",
+  "just",
+  "japan",
+];
+// (2 ** (1/12)) ** -9 * 440.0
+const C4HZ: f64 = 261.6255653005985;
+
+pub fn run(tune_name: &str) -> anyhow::Result<()> {
   info!("Let's display tune: {} tuning", tune_name);
   match tune_name {
-    "pythagoras" => {
-      let mut sounds = Tuner::<tune::Pythagoras>::new().tune();
-      for (idx, factor) in &sounds {
-        info!("{}, {}", idx, factor * c4hz);
-      }
-      info!("-- original order --");
-      // http://www15.plala.or.jp/gundog/homepage/densi/onkai/onkai.html
-      info!("レ(D)を基準として音名と合わせると：");
-      sounds.sort_by_key(|(idx, _factor)| *idx);
-      let names = ["ファ(F)", "ソ(G)", "ラ(A)", "シ(B)", "ド(C)", "レ(D)", "ミ(E)"];
-      let mut sounds = sounds.iter().zip(names).map(|((a,b), c)| (*a, *b, c)).collect::<Vec<_>>();
-      for (idx, factor, name) in &sounds {
-        info!("{}, {}, {}, {} [Hz]", idx, name, factor, factor * c4hz);
-      }
-      sounds[4].1 /= 4.0;
-      sounds[5].1 /= 4.0;
-      sounds[6].1 /= 4.0;
-      info!("-- re-order --");
-      sounds.sort_by(|(_idx1, factor1, _name1), (_idx2, factor2, _name2)| factor1.partial_cmp(factor2).unwrap());
-      let first = sounds[0].1;
-      let sounds = sounds.iter().map(|(idx, factor, name)| {
-        let mut factor = *factor / first;
-        while  factor < 1.0 {
-          factor *= 2.0;
-        }
-        while factor >= 2.0 {
-          factor /= 2.0;
-        }
-        (*idx, factor, *name)
-      }).collect::<Vec<_>>();
-      for (idx, factor, name) in &sounds {
-        info!("{}, {}, {}, {} [Hz]", idx, name, factor, factor * c4hz);
-      }
-      let mut sounds = sounds.iter().map(|(_idx, factor, _name)| *factor * c4hz).collect::<Vec<_>>();
-      sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
-      output(tune_name, &sounds)?;
-    },
-    "lydian" => {
-      let sounds = Tuner::<tune::Lydian>::new().tune();
-      for (idx, factor) in &sounds {
-        info!("{}, {}", idx, factor * c4hz);
-      }
-      // Adjust
-      info!("ドを基準として音名と合わせると：");
-      let names = ["ド(C)", "ド#(C#)", "レ(D)", "レ#(D#)", "ミ(E)", "ファ(F)", "ファ#(F#)", "ソ(G)", "ソ#(G#)", "ラ(A)", "ラ#(A#)", "シ(B)", "ド(C)"];
-      let mut sounds = sounds.iter().zip(names).map(|((a, b), d)| (*a, *b, d)).collect::<Vec<_>>();
-      for (idx, factor, name) in &sounds {
-        info!("{}, {}, {}, {} [Hz]", idx, name, factor, factor * c4hz);
-      }
-      info!("-- order by idx --");
-      sounds.sort_by_key(|(idx, _factor, _name)| *idx);
-      for (idx, factor, name) in &sounds {
-        info!("{}, {}, {}", idx, name, factor);
-      }
-      // write lydian.wav
-      let mut sounds = sounds.iter().take(7).map(|(_idx, factor, _name)| *factor * c4hz).collect::<Vec<_>>();
-      sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
-      output(tune_name, &sounds)?;
-    },
-    "just" => {
-      let sounds = Tuner::<tune::Just>::new().tune();
-      for (idx, factor) in &sounds {
-        info!("{}, {}", idx, factor * c4hz);
-      }
-      info!("ドを基準として音名と合わせると：");
-      let names = ["ド(A)", "レ(D)", "ミ(E)", "ファ(F)", "ソ(G)", "ラ(A)", "シ(B)"];
-      for ((idx, factor), name) in sounds.iter().zip(names) {
-        info!("{}, {}, {}", idx, name, factor);
-      }
-      let sounds = sounds.iter().map(|(_idx, factor)| *factor * c4hz).collect::<Vec<_>>();
-      output("just", &sounds)?;
-    },
-    "japan" => {
-      let sounds = Tuner::<tune::Japan>::new().tune();
-      for (idx, factor) in &sounds {
-        info!("{}, {}", idx, factor * c4hz);
-      }
-      info!("ドを基準として音名と合わせると：");
-      let names = ["ド(A)", "レ(D)", "ミ(E)", "ソ(G)", "ラ(A)"];
-      for ((idx, factor), name) in sounds.iter().zip(names) {
-        info!("{}, {}, {}", idx, name, factor);
-      }
-      // write lydian.wav
-      let mut sounds = sounds.iter().map(|(_idx, factor)| *factor * c4hz).collect::<Vec<_>>();
-      sounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
-      output(tune_name, &sounds)?;
-    },
+    "pythagoras" => pythagoras::run(),
+    "lydian" => lydian::run(),
+    "just" => just::run(),
+    "japan" => japan::run(),
     name => {
       let msg = format!("Unknown name: {}", name);
-      return Err(anyhow::Error::msg(msg));
+      Err(anyhow::Error::msg(msg))
     },
   }
-  Ok(())
 }
 pub fn output(name: &str, sounds: &Vec<f64>) -> anyhow::Result<()> {
   use std::f64::consts::PI;

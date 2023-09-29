@@ -1,10 +1,11 @@
+use log::debug;
+use crate::cmd::{display, play};
+
 mod tune;
 mod cmd;
 
 fn app() -> clap::Command {
   use clap::{Command, Arg, ArgAction, value_parser};
-  let play_tunes = ["average", "pythagoras", "lydian", "just", "japan"];
-  let display_tunes = ["average", "pythagoras", "lydian", "just", "japan"];
   Command::new("tune")
     .author("Kaede Fujisaki")
     .about("Tune")
@@ -22,7 +23,7 @@ fn app() -> clap::Command {
         .help("tuning name")
         .action(ArgAction::Set)
         .index(1)
-        .value_parser(display_tunes)
+        .value_parser(display::TUNES)
         .required(true)))
     .subcommand(Command::new("play")
       .arg(Arg::new("tune")
@@ -30,7 +31,7 @@ fn app() -> clap::Command {
         .action(ArgAction::Set)
         .long("tune")
         .short('t')
-        .value_parser(play_tunes))
+        .value_parser(play::TUNES))
       .arg(Arg::new("FILENAME")
         .help("midi file name")
         .index(1)
@@ -56,7 +57,7 @@ fn setup_logger(log_level: log::LevelFilter) -> Result<(), fern::InitError> {
   Ok(())
 }
 fn main() -> anyhow::Result<()> {
-  use log::{info, debug};
+  use log::debug;
   let m = app().get_matches();
   let log_level = match m.get_one::<u8>("verbose") {
     None | Some(0) => log::LevelFilter::Info,
@@ -64,29 +65,18 @@ fn main() -> anyhow::Result<()> {
     _ => log::LevelFilter::Trace,
   };
   setup_logger(log_level)?;
+  debug!("Logging level: {}", log_level);
 
   let (cmd, m) = m.subcommand().expect("No subcommand!");
   match cmd {
     "display" => {
       let tune_name = m.get_one::<String>("NAME").expect("[BUG] NAME is not set").clone();
-      cmd::display::display(&tune_name)
+      display::run(&tune_name)
     },
     "play" => {
       let file_name = m.get_one::<String>("FILENAME").expect("[BUG] FILENAME is not set").clone();
       let tune_name = m.get_one::<String>("tune").expect("[BUG] --tune is not set").clone();
-      let file_bytes = std::fs::read(&file_name)?;
-      let mid = {
-        info!("Parsing: \"{}\"", &file_name);
-        let mid = midly::Smf::parse(&file_bytes)?;
-        debug!("  - Timing: {:?}", mid.header.format);
-        debug!("  - Format: {:?}", mid.header.timing);
-        debug!("  - {} tracks", mid.tracks.len());
-        for (idx, track) in (0..mid.tracks.len()).zip(&mid.tracks) {
-          debug!("    - Track[{}]: {} events", idx, track.len());
-        }
-        mid
-      };
-      Ok(())
+      play::run(&tune_name, &file_name)
     },
     sub_cmd => {
       Err(anyhow::Error::msg(format!("Unknown subcommand: {}", sub_cmd)))
