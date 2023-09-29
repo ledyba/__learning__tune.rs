@@ -33,13 +33,19 @@ pub fn run(tune_name: &str) -> anyhow::Result<()> {
 pub fn output(name: &str, sounds: &Vec<f64>) -> anyhow::Result<()> {
   use std::f64::consts::PI;
 
+  let filename = {
+    let path = std::path::Path::new(".").join("display.wav");
+    std::fs::create_dir_all(path.clone().into_os_string())?;
+    path.join(format!("{}.wave", name))
+  };
+
   let spec = hound::WavSpec {
     channels: 1,
     sample_rate: 44100,
     bits_per_sample: 16,
     sample_format: hound::SampleFormat::Int,
   };
-  let mut writer = hound::WavWriter::create(format!("{}.wav", name), spec)?;
+  let mut writer = hound::WavWriter::create(filename, spec)?;
   let num_samples = spec.sample_rate as usize;
   let num_samples_near_last = num_samples * 99 / 100;
   let num_samples_near_beg = num_samples * 1 / 100;
