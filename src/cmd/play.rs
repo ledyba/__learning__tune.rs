@@ -1,11 +1,10 @@
 use log::{debug, info};
 
-pub const TUNES: [&'static str; 5] = [
+pub const TUNES: [&'static str; 4] = [
   "average",
   "pythagoras",
   "lydian",
   "just",
-  "japan",
 ];
 
 pub fn run(tune_name: &str, file_name: &str) -> anyhow::Result<()> {
