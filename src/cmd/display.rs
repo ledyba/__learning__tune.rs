@@ -36,7 +36,9 @@ pub fn output(name: &str, sounds: &Vec<f64>) -> anyhow::Result<()> {
   let filename = {
     let path = std::path::Path::new(".").join("display.wav");
     std::fs::create_dir_all(path.clone().into_os_string())?;
-    path.join(format!("{}.wave", name))
+    path
+      .join(name)
+      .with_extension("wav")
   };
 
   let spec = hound::WavSpec {
