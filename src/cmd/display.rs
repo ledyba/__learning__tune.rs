@@ -1,3 +1,4 @@
+use std::cmp::max;
 use log::info;
 
 mod average;
@@ -49,29 +50,37 @@ pub fn output(name: &str, sounds: &Vec<f64>) -> anyhow::Result<()> {
   };
   let mut writer = hound::WavWriter::create(filename, spec)?;
   let num_samples = spec.sample_rate as usize;
-  let num_fade = num_samples / 100;
+  let num_fade = num_samples / 50;
+  let num_fade_half = (num_fade / 2);
   let mut t = 0;
   let amplitude = i16::MAX as f64;
-  let mut max = 0.0;
-  let mut min = 0.0;
+  let mut max_sample: f64 = -1.0;
+  let mut min_sample: f64 = 1.0;
   for hz in sounds {
     for dt in 0..num_samples {
       let x = (t + dt) as f64 / (spec.sample_rate as f64);
       let sample = (x * hz * 2.0 * PI).sin();
-      let f = if dt <= num_fade {
-        (dt as f64) / (num_fade as f64)
-      } else if dt >= (num_samples - num_fade) {
-        (num_samples - dt) as f64 / (num_fade as f64)
-      } else {
+      let f = if dt <= num_fade_half {
+        0.0
+      } else if dt <= num_fade {
+        ((dt - num_fade_half) as f64) / (num_fade_half as f64)
+      } else if dt <= (num_samples - num_fade) {
         1.0
+      } else if dt <= (num_samples - num_fade_half) {
+        ((num_samples - num_fade_half - dt) as f64) / (num_fade_half as f64)
+      } else {
+        0.0
       };
       let sample = sample * f;
-      max = sample.max(max);
-      min = sample.min(min);
+      max_sample = max_sample.min(sample);
+      min_sample = min_sample.max(sample);
       writer.write_sample((sample * amplitude) as i16)?;
     }
     t += num_samples;
   }
-  info!("max: {} min: {}", max, min);
+  for _ in 0..num_fade {
+    writer.write_sample(0)?;
+  }
+  info!("max: {} min: {}", max_sample, min_sample);
   Ok(())
 }
