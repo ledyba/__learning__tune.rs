@@ -1,4 +1,5 @@
 use log::{debug, info};
+use crate::player::{Player, Tuner};
 
 pub const TUNES: [&'static str; 4] = [
   "average",
@@ -21,5 +22,11 @@ pub fn run(tune_name: &str, file_name: &str) -> anyhow::Result<()> {
     mid
   };
   info!("Playing \"{}\" using \"{}\" tuning.", file_name, tune_name);
+  let tuner: Box<dyn Tuner> = make_tuner(tune_name);
+  let player = Player::new(tuner);
   Ok(())
+}
+
+fn make_tuner(tune_name: &str) -> Box<dyn Tuner> {
+  todo!()
 }

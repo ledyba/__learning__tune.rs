@@ -1,8 +1,8 @@
 use log::debug;
 use crate::cmd::{display, play};
 
-mod tune;
 mod cmd;
+mod player;
 
 fn app() -> clap::Command {
   use clap::{Command, Arg, ArgAction, value_parser};
