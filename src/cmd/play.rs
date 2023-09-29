@@ -20,6 +20,7 @@ pub fn run(tune_name: &str, file_name: &str) -> anyhow::Result<()> {
     }
     mid
   };
+  info!("Playing {} using {}", file_name, tune_name);
   Ok(())
 
 }
