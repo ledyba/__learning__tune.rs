@@ -1,4 +1,3 @@
-use std::cmp::max;
 use log::info;
 
 mod average;
@@ -51,7 +50,7 @@ pub fn output(name: &str, sounds: &Vec<f64>) -> anyhow::Result<()> {
   let mut writer = hound::WavWriter::create(filename, spec)?;
   let num_samples = spec.sample_rate as usize;
   let num_fade = num_samples / 50;
-  let num_fade_half = (num_fade / 2);
+  let num_fade_half = num_fade / 2;
   let mut t = 0;
   let amplitude = i16::MAX as f64;
   let mut max_sample: f64 = -1.0;

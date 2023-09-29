@@ -1,4 +1,3 @@
-use log::debug;
 use crate::cmd::{display, play};
 
 mod cmd;
