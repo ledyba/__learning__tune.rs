@@ -1,3 +1,5 @@
+mod average;
+
 use log::{debug, info};
 use crate::player::{Player, Tuner};
 
@@ -7,6 +9,17 @@ pub const TUNES: [&'static str; 4] = [
   "lydian",
   "just",
 ];
+
+fn make_tuner(tune_name: &str) -> anyhow::Result<Box<dyn Tuner>> {
+  match tune_name {
+    "average" => Ok(Box::new(average::Average::new())),
+    name => {
+      let msg = format!("Unknown name: {}", name);
+      Err(anyhow::Error::msg(msg))
+    },
+  }
+
+}
 
 pub fn run(tune_name: &str, file_name: &str) -> anyhow::Result<()> {
   let file_bytes = std::fs::read(&file_name)?;
@@ -22,11 +35,8 @@ pub fn run(tune_name: &str, file_name: &str) -> anyhow::Result<()> {
     mid
   };
   info!("Playing \"{}\" using \"{}\" tuning.", file_name, tune_name);
-  let tuner: Box<dyn Tuner> = make_tuner(tune_name);
+  let tuner: Box<dyn Tuner> = make_tuner(tune_name)?;
   let player = Player::new(tuner);
+  player.play(&mid, file_name)?;
   Ok(())
-}
-
-fn make_tuner(tune_name: &str) -> Box<dyn Tuner> {
-  todo!()
 }
