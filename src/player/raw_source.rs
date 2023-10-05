@@ -35,7 +35,6 @@ impl Iterator for RawSource {
 impl rodio::source::Source for RawSource {
   fn current_frame_len(&self) -> Option<usize> {
     Some(self.data.len())
-    //None
   }
 
   fn channels(&self) -> u16 {
