@@ -1,4 +1,5 @@
 mod raw_source;
+mod tuner;
 
 use std::collections::HashSet;
 use std::path::Path;
@@ -6,13 +7,8 @@ use log::{debug, info};
 use midly::{MetaMessage, Track, TrackEvent, TrackEventKind};
 
 pub use raw_source::RawSource;
+pub use tuner::Tuner;
 
-///
-/// Tuner maps midi key into frequency.
-///
-pub trait Tuner {
-  fn freq(&self, code: u8) -> f64;
-}
 /// A4 midi code
 pub const A4: u8 = 69;
 
@@ -27,6 +23,7 @@ struct EventState<'a> {
   /// Exclusive
   until: usize,
 }
+
 #[derive(Debug, Eq, PartialEq)]
 struct TrackState<'a> {
   track: &'a Track<'a>,
