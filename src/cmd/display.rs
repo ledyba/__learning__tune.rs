@@ -37,33 +37,37 @@ pub fn output(name: &str, sounds: &Vec<f64>) -> anyhow::Result<()> {
   let (_stream, handle) = rodio::OutputStream::try_default()?;
   let sink = rodio::Sink::try_new(&handle)?;
   let sample_rate = (48 * 1000) as usize;
-  let num_samples = sample_rate as usize;
-  let num_fade = num_samples / 50;
+  let samples_per_sound = sample_rate * 1;
+  let num_fade = samples_per_sound / 100;
   let num_fade_half = num_fade / 2;
+  let amp = 0.7;
   let mut t = 0;
   let mut max_sample: f32 = -1.0;
   let mut min_sample: f32 = 1.0;
+  for _ in 0..num_fade {
+    wav.push(0.0);
+  }
   for hz in sounds {
-    for dt in 0..num_samples {
+    for dt in 0..samples_per_sound {
       let x = (t + dt) as f64 / (sample_rate as f64);
       let sample = (x * hz * 2.0 * PI).sin();
       let f = if dt <= num_fade_half {
         0.0
       } else if dt <= num_fade {
         ((dt - num_fade_half) as f64) / (num_fade_half as f64)
-      } else if dt <= (num_samples - num_fade) {
+      } else if dt <= (samples_per_sound - num_fade) {
         1.0
-      } else if dt <= (num_samples - num_fade_half) {
-        ((num_samples - num_fade_half - dt) as f64) / (num_fade_half as f64)
+      } else if dt <= (samples_per_sound - num_fade_half) {
+        ((samples_per_sound - num_fade_half - dt) as f64) / (num_fade_half as f64)
       } else {
         0.0
       };
-      let sample = (sample * f) as f32;
+      let sample = (sample * f * amp) as f32;
       max_sample = max_sample.min(sample);
       min_sample = min_sample.max(sample);
       wav.push(sample);
     }
-    t += num_samples;
+    t += samples_per_sound + num_fade;
   }
   for _ in 0..num_fade {
     wav.push(0.0);
