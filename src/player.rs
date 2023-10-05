@@ -1,7 +1,11 @@
+mod raw_source;
+
 use std::collections::HashSet;
 use std::path::Path;
 use log::{debug, info};
 use midly::{MetaMessage, Track, TrackEvent, TrackEventKind};
+
+pub use raw_source::RawSource;
 
 ///
 /// Tuner maps midi key into frequency.
