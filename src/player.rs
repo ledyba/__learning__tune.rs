@@ -1,10 +1,10 @@
 mod raw_source;
 mod tuner;
 
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::path::Path;
-use log::{debug, info};
-use midly::{MetaMessage, Track, TrackEvent, TrackEventKind};
+use log::{debug, info, warn};
+use midly::{MetaMessage, MidiMessage, Track, TrackEvent, TrackEventKind};
 
 pub use raw_source::RawSource;
 pub use tuner::Tuner;
@@ -17,19 +17,16 @@ pub struct Player {
 }
 
 #[derive(Debug, Eq, PartialEq, Hash)]
-struct EventState<'a> {
-  event: &'a TrackEvent<'a>,
-  from: usize,
-  /// Exclusive
-  until: usize,
+struct Note {
+  velocity: u8,
 }
 
 #[derive(Debug, Eq, PartialEq)]
-struct TrackState<'a> {
+struct TrackPlayer<'a> {
   track: &'a Track<'a>,
-  done: bool,
-  consumed: usize,
-  current_events: HashSet<EventState<'a>>
+  consumed_idx: usize,
+  next_event_time: usize,
+  current_notes: HashMap<u8, Note>
 }
 
 impl Player {
@@ -41,29 +38,91 @@ impl Player {
 
   pub fn play<P: AsRef<Path>>(&self, mid: &midly::Smf, path: P) -> anyhow::Result<()> {
     let mut clock = 0;
-    for i in 0..mid.tracks.len() {
-      for e in &mid.tracks[i] {
-        info!("[{}] {:?}", i, e);
-      }
-    }
     let mut tracks = Vec::from_iter(
       mid.tracks.iter().map(|track| {
-        TrackState {
+        TrackPlayer {
           track,
-          done: false,
-          consumed: 0,
-          current_events: HashSet::new(),
+          consumed_idx: 0,
+          next_event_time: 0,
+          current_notes: HashMap::new(),
         }
       })
     );
-    for (track_idx, state) in (0..tracks.len()).zip(&mut tracks) {
-      let track = state.track;
-      let consumed = &mut state.consumed;
-      if state.done || *consumed >= track.len() {
-        continue;
+    while !tracks.iter().all(|state| state.done()) {
+      for state in &mut tracks {
+        state.process(clock);
       }
-      let e= &track[*consumed];
+      clock += 1;
     }
     Ok(())
+  }
+}
+
+impl <'a> TrackPlayer<'a> {
+  fn done(&self) -> bool {
+    self.consumed_idx >= self.track.len()
+  }
+  fn process(&mut self, clock: usize) {
+    let track = self.track;
+    if self.done() || clock < self.next_event_time {
+      return;
+    }
+    let notes = &mut self.current_notes;
+    let e= &track[self.consumed_idx];
+    self.consumed_idx += 1;
+    self.next_event_time += e.delta.as_int() as usize;
+    match e.kind {
+      TrackEventKind::Midi { channel, message } => {
+        match message {
+          MidiMessage::NoteOff { key, vel } => {
+            debug!("Note off: {}, {}", key, vel);
+            let r = notes.remove(&key.as_int());
+            if r.is_none() {
+              warn!("Missing note off: {}, {}", key, vel);
+            }
+          },
+          MidiMessage::NoteOn { key, vel } => {
+            debug!("Note on : {}, {}", key, vel);
+            notes.insert(key.as_int(), Note {
+              velocity: vel.as_int(),
+            });
+          },
+          MidiMessage::Aftertouch { key, vel } => {
+            if let Some(note) = notes.get_mut(&key.as_int()) {
+              note.velocity = vel.as_int();
+            }
+          },
+          MidiMessage::Controller { .. } => {},
+          MidiMessage::ProgramChange { .. } => {},
+          MidiMessage::ChannelAftertouch { .. } => {},
+          MidiMessage::PitchBend { .. } => {},
+        }
+      },
+      TrackEventKind::SysEx(_) => {},
+      TrackEventKind::Escape(_) => {},
+      TrackEventKind::Meta(meta) => {
+        match meta {
+          MetaMessage::TrackNumber(_) => {}
+          MetaMessage::Text(_) => {}
+          MetaMessage::Copyright(_) => {}
+          MetaMessage::TrackName(_) => {}
+          MetaMessage::InstrumentName(_) => {}
+          MetaMessage::Lyric(_) => {}
+          MetaMessage::Marker(_) => {}
+          MetaMessage::CuePoint(_) => {}
+          MetaMessage::ProgramName(_) => {}
+          MetaMessage::DeviceName(_) => {}
+          MetaMessage::MidiChannel(_) => {}
+          MetaMessage::MidiPort(_) => {}
+          MetaMessage::EndOfTrack => {}
+          MetaMessage::Tempo(_) => {}
+          MetaMessage::SmpteOffset(_) => {}
+          MetaMessage::TimeSignature(_, _, _, _) => {}
+          MetaMessage::KeySignature(_, _) => {}
+          MetaMessage::SequencerSpecific(_) => {}
+          MetaMessage::Unknown(_, _) => {}
+        }
+      },
+    }
   }
 }
