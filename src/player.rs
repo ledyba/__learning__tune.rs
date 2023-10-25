@@ -75,14 +75,14 @@ impl <'a> TrackPlayer<'a> {
       TrackEventKind::Midi { channel, message } => {
         match message {
           MidiMessage::NoteOff { key, vel } => {
-            debug!("Note off: {}, {}", key, vel);
+            //debug!("Note off: {}, {}", key, vel);
             let r = notes.remove(&key.as_int());
             if r.is_none() {
               warn!("Missing note off: {}, {}", key, vel);
             }
           },
           MidiMessage::NoteOn { key, vel } => {
-            debug!("Note on : {}, {}", key, vel);
+            //debug!("Note on : {}, {}", key, vel);
             notes.insert(key.as_int(), Note {
               velocity: vel.as_int(),
             });
@@ -102,9 +102,15 @@ impl <'a> TrackPlayer<'a> {
       TrackEventKind::Escape(_) => {},
       TrackEventKind::Meta(meta) => {
         match meta {
-          MetaMessage::TrackNumber(_) => {}
-          MetaMessage::Text(_) => {}
-          MetaMessage::Copyright(_) => {}
+          MetaMessage::TrackNumber(num) => {
+            info!("TrackNumber: {:?}", num);
+          }
+          MetaMessage::Text(text) => {
+            info!("Text: {}", String::from_utf8_lossy(text))
+          }
+          MetaMessage::Copyright(text) => {
+            info!("Copyright: \n```\n{}\n```", String::from_utf8_lossy(text))
+          }
           MetaMessage::TrackName(_) => {}
           MetaMessage::InstrumentName(_) => {}
           MetaMessage::Lyric(_) => {}
