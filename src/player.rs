@@ -106,12 +106,14 @@ impl <'a> TrackPlayer<'a> {
             info!("TrackNumber: {:?}", num);
           }
           MetaMessage::Text(text) => {
-            info!("Text: {}", String::from_utf8_lossy(text))
+            info!("Text: {}", String::from_utf8_lossy(text));
           }
           MetaMessage::Copyright(text) => {
-            info!("Copyright: \n```\n{}\n```", String::from_utf8_lossy(text))
+            info!("Copyright: \n```\n{}\n```", String::from_utf8_lossy(text));
           }
-          MetaMessage::TrackName(_) => {}
+          MetaMessage::TrackName(text) => {
+            info!("TrackName: {}", String::from_utf8_lossy(text));
+          }
           MetaMessage::InstrumentName(_) => {}
           MetaMessage::Lyric(_) => {}
           MetaMessage::Marker(_) => {}
