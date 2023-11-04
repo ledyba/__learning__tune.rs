@@ -7,6 +7,11 @@ See: [src/tune](src/tune)
 - [三分損益法 - Wikipedia](https://ja.wikipedia.org/wiki/%E4%B8%89%E5%88%86%E6%90%8D%E7%9B%8A%E6%B3%95)
 - [中全音律 - Wikipedia](https://ja.wikipedia.org/wiki/%E4%B8%AD%E5%85%A8%E9%9F%B3%E5%BE%8B) (Meantone)
 
+# MIDI
+
+- [The MIDI Association - Home](https://www.midi.org/specifications)
+- [MIDI1.0.pdf](https://amei.or.jp/midistandardcommittee/MIDI1.0.pdf)
+
 # Sample file
 
 - From: [kunstderfuge.com](https://kunstderfuge.com/)
