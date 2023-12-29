@@ -13,6 +13,6 @@ impl Average {
 
 impl Tuner for Average {
   fn freq(&self, code: u8) -> f64 {
-    440.0 * (2.0_f64.powf(1.0 / 12.0)).powi((code - A4) as i32)
+    440.0 * (2.0_f64.powf(1.0 / 12.0)).powi(code as i32 - A4)
   }
 }

@@ -1,5 +1,6 @@
 mod average;
 
+use std::rc::Rc;
 use log::{debug, info};
 use crate::player::{Player, Tuner};
 
@@ -10,15 +11,14 @@ pub const TUNES: [&'static str; 4] = [
   "just",
 ];
 
-fn make_tuner(tune_name: &str) -> anyhow::Result<Box<dyn Tuner>> {
+fn make_tuner(tune_name: &str) -> anyhow::Result<Rc<dyn Tuner>> {
   match tune_name {
-    "average" => Ok(Box::new(average::Average::new())),
+    "average" => Ok(Rc::new(average::Average::new())),
     name => {
       let msg = format!("Unknown name: {}", name);
       Err(anyhow::Error::msg(msg))
     },
   }
-
 }
 
 pub fn run(tune_name: &str, file_name: &str) -> anyhow::Result<()> {
@@ -35,7 +35,7 @@ pub fn run(tune_name: &str, file_name: &str) -> anyhow::Result<()> {
     mid
   };
   info!("Playing \"{}\" using \"{}\" tuning.", file_name, tune_name);
-  let tuner: Box<dyn Tuner> = make_tuner(tune_name)?;
+  let tuner: Rc<dyn Tuner> = make_tuner(tune_name)?;
   let player = Player::new(tuner);
   player.play(&mid, file_name)?;
   Ok(())
