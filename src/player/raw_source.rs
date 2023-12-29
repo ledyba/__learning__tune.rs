@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+#[derive(Debug, Clone)]
 pub struct RawSource {
   data: Vec<f32>,
   num_channels: u16,
