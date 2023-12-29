@@ -26,8 +26,8 @@ pub fn run(tune_name: &str, file_name: &str) -> anyhow::Result<()> {
   let mid = {
     info!("Parsing: \"{}\"", &file_name);
     let mid = midly::Smf::parse(&file_bytes)?;
-    debug!("  - Timing: {:?}", mid.header.format);
-    debug!("  - Format: {:?}", mid.header.timing);
+    debug!("  - Format: {:?}", mid.header.format);
+    debug!("  - Timing: {:?}", mid.header.timing);
     debug!("  - {} tracks", mid.tracks.len());
     for (idx, track) in (0..mid.tracks.len()).zip(&mid.tracks) {
       debug!("    - Track[{}]: {} events", idx, track.len());
