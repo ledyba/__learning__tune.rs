@@ -27,6 +27,8 @@ pub fn run(tune_name: &str, file_name: &str) -> anyhow::Result<()> {
     info!("Parsing: \"{}\"", &file_name);
     let mid = midly::Smf::parse(&file_bytes)?;
     debug!("  - Format: {:?}", mid.header.format);
+    // https://amei.or.jp/midistandardcommittee/MIDI1.0.pdf
+    // p.137
     debug!("  - Timing: {:?}", mid.header.timing);
     debug!("  - {} tracks", mid.tracks.len());
     for (idx, track) in (0..mid.tracks.len()).zip(&mid.tracks) {
