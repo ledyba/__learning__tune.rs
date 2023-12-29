@@ -2,10 +2,13 @@ mod raw_source;
 mod tuner;
 
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::BufWriter;
 use std::path::Path;
 use std::rc::Rc;
+use hound::WavWriter;
 use log::{info, warn};
-use midly::{MetaMessage, MidiMessage, Track, TrackEventKind};
+use midly::{MetaMessage, MidiMessage, Timing, Track, TrackEventKind};
 
 pub use raw_source::RawSource;
 pub use tuner::Tuner;
@@ -14,28 +17,38 @@ pub use tuner::Tuner;
 pub const A4: i32 = 69;
 
 struct Sink {
-  buffer: Vec<f32>,
+  wav: WavWriter<BufWriter<File>>,
+  current_sample: usize,
+  ticks_per_note: usize,
+  sample_per_tick: f64,
+  next_tick_sample: f64,
 }
 
 impl Sink {
-  fn new() -> Self {
+  fn new(
+    wav: WavWriter<BufWriter<File>>,
+    ticks_per_note: usize,
+  ) -> Self {
     Self {
-      buffer: Vec::new(),
+      wav,
+      current_sample: 0,
+      ticks_per_note,
+      sample_per_tick: wav.spec().sample_rate / (ticks_per_note as f64),
+      next_tick_sample: 0.0,
     }
-  }
-  fn put(&mut self, time: usize, sample: f32) {
-    if self.buffer.len() < time {
-      self.buffer.resize(time + 1, 0.0);
-    }
-    self.buffer[time] += sample;
   }
 
-  fn max(&self) -> f32 {
-    let mut m = 0.0_f32;
-    for sample in &self.buffer {
-      m = m.max(sample.abs());
+  fn put(&mut self, f: impl FnOnce(&mut WavWriter<BufWriter<File>>, usize) -> anyhow::Result<()>) -> anyhow::Result<()> {
+    while (self.current_sample as f64) < self.next_tick_sample {
+      f(&mut self.wav, self.current_sample)?;
+      self.current_sample += 1;
     }
-    m
+    self.next_tick_sample += self.sample_per_tick;
+  }
+
+  fn finalize(&mut self) -> anyhow::Result<()> {
+    self.wav.finalize()?;
+    Ok(())
   }
 }
 
@@ -54,8 +67,9 @@ struct TrackPlayer<'a> {
   tuner: Rc<dyn Tuner>,
   track: &'a Track<'a>,
   current_idx: usize,
-  next_event_time: usize,
+  next_event_tick: usize,
   notes: HashMap<u8, Note>,
+  ticks_per_note: usize,
 }
 
 impl Player {
@@ -66,25 +80,40 @@ impl Player {
   }
 
   pub fn play<P: AsRef<Path>>(&self, mid: &midly::Smf, path: P) -> anyhow::Result<()> {
-    let mut sink = Sink::new();
-    let mut clock = 0;
+    let spec = hound::WavSpec {
+      channels: 1,
+      sample_rate: 44100,
+      bits_per_sample: 16,
+      sample_format: hound::SampleFormat::Int,
+    };
+    let mut wav = hound::WavWriter::create(path, spec)?;
+    let mut ticks = 0;
+    let ticks_per_note = match mid.header.timing {
+      Timing::Metrical(ticks) => {
+        ticks.as_int() as usize
+      }
+      Timing::Timecode(_, _) => todo!(),
+    };
+    let mut sink = Sink::new(wav, ticks_per_note);
     let mut track_players = Vec::from_iter(
       mid.tracks.iter().map(|track| {
         TrackPlayer {
           tuner: self.tuner.clone(),
           track,
           current_idx: 0,
-          next_event_time: 0,
+          next_event_tick: 0,
           notes: HashMap::new(),
+          ticks_per_note,
         }
       })
     );
     while !track_players.iter().all(|state| state.done()) {
       for player in &mut track_players {
-        player.process(clock, &mut sink);
+        player.process(ticks, &mut sink);
       }
-      clock += 1;
+      ticks += 1;
     }
+    sink.finalize()?;
     Ok(())
   }
 }
@@ -93,16 +122,16 @@ impl <'a> TrackPlayer<'a> {
   fn done(&self) -> bool {
     self.current_idx >= self.track.len()
   }
-  fn process(&mut self, clock: usize, sink: &mut Sink) {
+  fn process(&mut self, ticks: usize, sink: &mut Sink) {
     let track = self.track;
     if self.done() {
       return;
     }
     let notes = &mut self.notes;
-    if clock >= self.next_event_time {
+    if ticks >= self.next_event_tick {
       let event = &track[self.current_idx];
       self.current_idx += 1;
-      self.next_event_time += event.delta.as_int() as usize;
+      self.next_event_tick += event.delta.as_int() as usize;
       match event.kind {
         TrackEventKind::Midi { channel, message } => {
           match message {
@@ -116,7 +145,7 @@ impl <'a> TrackPlayer<'a> {
             MidiMessage::NoteOn { key, vel } => {
               //debug!("Note on : {}, {}", key, vel);
               let note = Note {
-                start_at: clock,
+                start_at: ticks,
                 key: 0,
                 velocity: vel.as_int(),
               };
@@ -172,9 +201,13 @@ impl <'a> TrackPlayer<'a> {
     for (key, note) in &self.notes {
       use std::f64::consts::PI;
       let freq = tuner.freq(*key);
-      let t = (clock - note.start_at) as f64;
+      let start_at = note.start_at as f64 * sink.sample_per_tick;
       let vel = note.velocity as f64 / 127.0;
-      sink.put(clock, ((t * freq * 2.0 * PI).sin() * vel) as f32);
+      sink.put(|wav, current_sample| {
+        let t = current_sample as f64 - start_at;
+        wav.write_sample(((t * freq * 2.0 * PI).sin() * vel) as f32)?;
+        Ok(())
+      })?;
     }
   }
 }
