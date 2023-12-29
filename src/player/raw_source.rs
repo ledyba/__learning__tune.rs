@@ -15,7 +15,7 @@ impl RawSource {
     }
   }
 
-  pub fn iter(&self) -> impl Iterator<Item=f32> {
+  pub fn into_iter(self) -> ImplSourceIterator {
     ImplSourceIterator {
       source: self,
       current_pos: 0,
@@ -23,8 +23,8 @@ impl RawSource {
   }
 }
 
-pub struct ImplSourceIterator<'a> {
-  source: &'a RawSource,
+pub struct ImplSourceIterator {
+  source: RawSource,
   current_pos: usize,
 }
 

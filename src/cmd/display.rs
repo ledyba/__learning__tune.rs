@@ -86,7 +86,7 @@ fn generate_sounds(sounds: &Vec<f64>) -> Vec<f32> {
 fn play(data: &[f32]) -> anyhow::Result<()> {
   let (_stream, handle) = rodio::OutputStream::try_default()?;
   let sink = rodio::Sink::try_new(&handle)?;
-  sink.append(RawSource::new(Vec::from(data), 1, SAMPLE_RATE));
+  sink.append(RawSource::new(Vec::from(data), 1, SAMPLE_RATE).into_iter());
   sink.sleep_until_end();
   Ok(())
 }
