@@ -6,11 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.77"
-clap = "4.4.12"
+anyhow = "1.0.86"
+clap = "4.5.4"
 fern = "0.6.2"
-log = "0.4.20"
-chrono = "0.4.31"
+log = "0.4.21"
+chrono = "0.4.38"
 hound = "3.5.1"
 midly = "0.5.3"
-rodio = "0.17.3"
+rodio = "0.18.1"
