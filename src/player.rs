@@ -59,9 +59,8 @@ pub struct Player {
 }
 
 #[derive(Debug, Eq, PartialEq, Hash)]
-struct Note {
+struct NoteState {
   start_at: usize,
-  key: u8,
   velocity: u8,
 }
 
@@ -70,7 +69,7 @@ struct TrackPlayer<'a> {
   track: &'a Track<'a>,
   current_idx: usize,
   next_event_tick: usize,
-  notes: HashMap<u8, Note>,
+  current_notes: HashMap<u8, NoteState>,
   ticks_per_note: usize,
 }
 
@@ -104,7 +103,7 @@ impl Player {
           track,
           current_idx: 0,
           next_event_tick: 0,
-          notes: HashMap::new(),
+          current_notes: HashMap::new(),
           ticks_per_note,
         }
       })
@@ -129,7 +128,7 @@ impl <'a> TrackPlayer<'a> {
     if self.done() {
       return Ok(());
     }
-    let notes = &mut self.notes;
+    let current_notes = &mut self.current_notes;
     if ticks >= self.next_event_tick {
       let event = &track[self.current_idx];
       self.current_idx += 1;
@@ -140,25 +139,24 @@ impl <'a> TrackPlayer<'a> {
           match message {
             MidiMessage::NoteOff { key, vel } => {
               //debug!("Note off: {}, {}", key, vel);
-              let r = notes.remove(&key.as_int());
+              let r = current_notes.remove(&key.as_int());
               if r.is_none() {
-                warn!("Missing note off: {}, {}", key, vel);
+                warn!("Missing note off: key={}, vel={}", key.as_int(), vel.as_int());
               }
             },
             MidiMessage::NoteOn { key, vel } => {
               //debug!("Note on : {}, {}", key, vel);
-              let note = Note {
+              let note = NoteState {
                 start_at: ticks,
-                key: key.as_int(),
                 velocity: vel.as_int(),
               };
-              notes.insert(key.as_int(), note);
+              current_notes.insert(key.as_int(), note);
             },
             MidiMessage::Aftertouch { key, vel } => {
-              if let Some(note) = notes.get_mut(&key.as_int()) {
+              if let Some(note) = current_notes.get_mut(&key.as_int()) {
                 note.velocity = vel.as_int();
               } else {
-                warn!("Note: {} not on!", key.as_int())
+                warn!("Note (vel={}) is not on!", key.as_int())
               }
             },
             MidiMessage::Controller { .. } => {},
@@ -193,7 +191,9 @@ impl <'a> TrackPlayer<'a> {
             MetaMessage::Lyric(lyric) => {
               info!("Lyric: {}", String::from_utf8_lossy(lyric));
             }
-            MetaMessage::Marker(_) => {}
+            MetaMessage::Marker(marker) => {
+              info!("Marker: {}", String::from_utf8_lossy(marker));
+            }
             MetaMessage::CuePoint(_) => {}
             MetaMessage::ProgramName(_) => {}
             MetaMessage::DeviceName(_) => {}
@@ -213,7 +213,7 @@ impl <'a> TrackPlayer<'a> {
       }
     }
     let tuner = &self.tuner;
-    for (key, note) in &self.notes {
+    for (key, note) in &self.current_notes {
       use std::f64::consts::PI;
       let freq = tuner.freq(*key);
       let start_at = note.start_at as f64 * sink.sample_per_tick;
