@@ -10,11 +10,11 @@ use hound::WavWriter;
 use log::{info, warn};
 use midly::{MetaMessage, MidiMessage, Timing, Track, TrackEventKind};
 
-pub use raw_source::RawSource;
 pub use tuner::Tuner;
 
 /// A4 midi code
 pub const A4: i32 = 69;
+pub const A4HZ: f64 = 440.0;
 
 struct Sink {
   wav: WavWriter<BufWriter<File>>,
@@ -29,24 +29,26 @@ impl Sink {
     wav: WavWriter<BufWriter<File>>,
     ticks_per_note: usize,
   ) -> Self {
+    let sample_rate = wav.spec().sample_rate as f64;
     Self {
       wav,
       current_sample: 0,
       ticks_per_note,
-      sample_per_tick: wav.spec().sample_rate / (ticks_per_note as f64),
+      sample_per_tick: sample_rate / (ticks_per_note as f64),
       next_tick_sample: 0.0,
     }
   }
 
-  fn put(&mut self, f: impl FnOnce(&mut WavWriter<BufWriter<File>>, usize) -> anyhow::Result<()>) -> anyhow::Result<()> {
+  fn put(&mut self, mut f: impl FnMut(&mut WavWriter<BufWriter<File>>, usize) -> anyhow::Result<()>) -> anyhow::Result<()> {
     while (self.current_sample as f64) < self.next_tick_sample {
       f(&mut self.wav, self.current_sample)?;
       self.current_sample += 1;
     }
     self.next_tick_sample += self.sample_per_tick;
+    Ok(())
   }
 
-  fn finalize(&mut self) -> anyhow::Result<()> {
+  fn finalize(mut self) -> anyhow::Result<()> {
     self.wav.finalize()?;
     Ok(())
   }
@@ -122,10 +124,10 @@ impl <'a> TrackPlayer<'a> {
   fn done(&self) -> bool {
     self.current_idx >= self.track.len()
   }
-  fn process(&mut self, ticks: usize, sink: &mut Sink) {
+  fn process(&mut self, ticks: usize, sink: &mut Sink) -> anyhow::Result<()> {
     let track = self.track;
     if self.done() {
-      return;
+      return Err(anyhow::Error::msg("Already done!"));
     }
     let notes = &mut self.notes;
     if ticks >= self.next_event_tick {
@@ -173,7 +175,11 @@ impl <'a> TrackPlayer<'a> {
               info!("Text: {}", String::from_utf8_lossy(text));
             }
             MetaMessage::Copyright(text) => {
-              info!("Copyright: \n```\n{}\n```", String::from_utf8_lossy(text));
+              let text = String::from_utf8_lossy(text)
+                .lines()
+                .map(|it| format!("  ## {it}\n"))
+                .fold(String::new(), |body, line| body + &line);
+              info!("Copyright: \n{}", text);
             }
             MetaMessage::TrackName(text) => {
               info!("TrackName: {}", String::from_utf8_lossy(text));
@@ -209,5 +215,6 @@ impl <'a> TrackPlayer<'a> {
         Ok(())
       })?;
     }
+    Ok(())
   }
 }

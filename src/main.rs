@@ -1,4 +1,4 @@
-use crate::cmd::{display, play};
+use crate::cmd::play;
 
 mod cmd;
 mod player;
@@ -16,14 +16,6 @@ fn app() -> clap::Command {
       .value_parser(value_parser!(u8))
       .help("Show verbose message"))
     .subcommand_required(true)
-    .subcommand(Command::new("display")
-      .about("Display about tune")
-      .arg(Arg::new("NAME")
-        .help("tuning name")
-        .action(ArgAction::Set)
-        .index(1)
-        .value_parser(display::TUNES)
-        .required(true)))
     .subcommand(Command::new("play")
       .arg(Arg::new("tune")
         .help("tune name")
@@ -68,10 +60,6 @@ fn main() -> anyhow::Result<()> {
 
   let (cmd, m) = m.subcommand().expect("No subcommand!");
   match cmd {
-    "display" => {
-      let tune_name = m.get_one::<String>("NAME").expect("[BUG] NAME is not set").clone();
-      display::run(&tune_name)
-    },
     "play" => {
       let file_name = m.get_one::<String>("FILENAME").expect("[BUG] FILENAME is not set").clone();
       let tune_name = m.get_one::<String>("tune").expect("[BUG] --tune is not set").clone();
