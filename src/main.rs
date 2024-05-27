@@ -22,12 +22,19 @@ fn app() -> clap::Command {
         .action(ArgAction::Set)
         .long("tune")
         .short('t')
+        .default_value("average")
         .value_parser(play::TUNES))
-      .arg(Arg::new("FILENAME")
+      .arg(Arg::new("MIDI FILENAME")
         .help("midi file name")
         .index(1)
         .action(ArgAction::Set)
         .default_value("sample/serenade_525_1_(c)ishii.mid")
+        .value_parser(value_parser!(String)))
+      .arg(Arg::new("WAVE FILENAME")
+        .help("wave file name")
+        .index(2)
+        .action(ArgAction::Set)
+        .default_value("sample.wav")
         .value_parser(value_parser!(String))))
 }
 
@@ -61,9 +68,10 @@ fn main() -> anyhow::Result<()> {
   let (cmd, m) = m.subcommand().expect("No subcommand!");
   match cmd {
     "play" => {
-      let file_name = m.get_one::<String>("FILENAME").expect("[BUG] FILENAME is not set").clone();
-      let tune_name = m.get_one::<String>("tune").expect("[BUG] --tune is not set").clone();
-      play::run(&tune_name, &file_name)
+      let tune_name = m.get_one::<String>("tune").expect("[BUG] --tune is not set");
+      let input = m.get_one::<String>("MIDI FILENAME").expect("[BUG] MIDI FILENAME is not set");
+      let output = m.get_one::<String>("WAVE FILENAME").expect("[BUG] WAV FILENAME is not set");
+      play::run(tune_name, input, output)
     },
     sub_cmd => {
       Err(anyhow::Error::msg(format!("Unknown subcommand: {}", sub_cmd)))

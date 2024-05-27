@@ -88,7 +88,7 @@ impl Player {
       bits_per_sample: 16,
       sample_format: hound::SampleFormat::Int,
     };
-    let mut wav = hound::WavWriter::create(path, spec)?;
+    let wav = hound::WavWriter::create(path, spec)?;
     let mut ticks = 0;
     let ticks_per_note = match mid.header.timing {
       Timing::Metrical(ticks) => {
@@ -111,7 +111,7 @@ impl Player {
     );
     while !track_players.iter().all(|state| state.done()) {
       for player in &mut track_players {
-        player.process(ticks, &mut sink);
+        player.process(ticks, &mut sink)?;
       }
       ticks += 1;
     }
@@ -127,7 +127,7 @@ impl <'a> TrackPlayer<'a> {
   fn process(&mut self, ticks: usize, sink: &mut Sink) -> anyhow::Result<()> {
     let track = self.track;
     if self.done() {
-      return Err(anyhow::Error::msg("Already done!"));
+      return Ok(());
     }
     let notes = &mut self.notes;
     if ticks >= self.next_event_tick {
@@ -136,6 +136,7 @@ impl <'a> TrackPlayer<'a> {
       self.next_event_tick += event.delta.as_int() as usize;
       match event.kind {
         TrackEventKind::Midi { channel, message } => {
+          let channel = channel.as_int();
           match message {
             MidiMessage::NoteOff { key, vel } => {
               //debug!("Note off: {}, {}", key, vel);
@@ -148,7 +149,7 @@ impl <'a> TrackPlayer<'a> {
               //debug!("Note on : {}, {}", key, vel);
               let note = Note {
                 start_at: ticks,
-                key: 0,
+                key: key.as_int(),
                 velocity: vel.as_int(),
               };
               notes.insert(key.as_int(), note);
@@ -156,6 +157,8 @@ impl <'a> TrackPlayer<'a> {
             MidiMessage::Aftertouch { key, vel } => {
               if let Some(note) = notes.get_mut(&key.as_int()) {
                 note.velocity = vel.as_int();
+              } else {
+                warn!("Note: {} not on!", key.as_int())
               }
             },
             MidiMessage::Controller { .. } => {},
@@ -177,15 +180,19 @@ impl <'a> TrackPlayer<'a> {
             MetaMessage::Copyright(text) => {
               let text = String::from_utf8_lossy(text)
                 .lines()
-                .map(|it| format!("  ## {it}\n"))
+                .map(|it| format!("  ##  {it}\n"))
                 .fold(String::new(), |body, line| body + &line);
               info!("Copyright: \n{}", text);
             }
             MetaMessage::TrackName(text) => {
               info!("TrackName: {}", String::from_utf8_lossy(text));
             }
-            MetaMessage::InstrumentName(_) => {}
-            MetaMessage::Lyric(_) => {}
+            MetaMessage::InstrumentName(name) => {
+              info!("InstrumentName: {}", String::from_utf8_lossy(name));
+            }
+            MetaMessage::Lyric(lyric) => {
+              info!("Lyric: {}", String::from_utf8_lossy(lyric));
+            }
             MetaMessage::Marker(_) => {}
             MetaMessage::CuePoint(_) => {}
             MetaMessage::ProgramName(_) => {}
@@ -193,7 +200,9 @@ impl <'a> TrackPlayer<'a> {
             MetaMessage::MidiChannel(_) => {}
             MetaMessage::MidiPort(_) => {}
             MetaMessage::EndOfTrack => {}
-            MetaMessage::Tempo(_) => {}
+            MetaMessage::Tempo(tempo) => {
+              info!("Tempo: {}", tempo);
+            }
             MetaMessage::SmpteOffset(_) => {}
             MetaMessage::TimeSignature(_, _, _, _) => {}
             MetaMessage::KeySignature(_, _) => {}

@@ -21,24 +21,24 @@ fn make_tuner(tune_name: &str) -> anyhow::Result<Rc<dyn Tuner>> {
   }
 }
 
-pub fn run(tune_name: &str, file_name: &str) -> anyhow::Result<()> {
-  let file_bytes = std::fs::read(&file_name)?;
+pub fn run(tune_name: &str, input: &str, output: &str) -> anyhow::Result<()> {
+  let bytes = std::fs::read(input)?;
   let mid = {
-    info!("Parsing: \"{}\"", &file_name);
-    let mid = midly::Smf::parse(&file_bytes)?;
-    debug!("  - Format: {:?}", mid.header.format);
+    info!("Parsing: \"{}\"", input);
+    let mid = midly::Smf::parse(&bytes)?;
+    info!("  - Format: {:?}", mid.header.format);
     // https://amei.or.jp/midistandardcommittee/MIDI1.0.pdf
     // p.137
-    debug!("  - Timing: {:?}", mid.header.timing);
-    debug!("  - {} tracks", mid.tracks.len());
+    info!("  - Timing: {:?}", mid.header.timing);
+    info!("  - {} tracks", mid.tracks.len());
     for (idx, track) in (0..mid.tracks.len()).zip(&mid.tracks) {
-      debug!("    - Track[{}]: {} events", idx, track.len());
+      info!("    - Track[{}]: {} midi events", idx, track.len());
     }
     mid
   };
-  info!("Playing \"{}\" using \"{}\" tuning.", file_name, tune_name);
+  info!("Playing \"{}\" -> \"{}\" using \"{}\" tuning.", input, output, tune_name);
   let tuner: Rc<dyn Tuner> = make_tuner(tune_name)?;
   let player = Player::new(tuner);
-  player.play(&mid, file_name)?;
+  player.play(&mid, output)?;
   Ok(())
 }
