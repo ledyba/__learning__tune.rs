@@ -196,10 +196,14 @@ impl <'a> TrackPlayer<'a> {
             }
             MetaMessage::CuePoint(_) => {}
             MetaMessage::ProgramName(_) => {}
-            MetaMessage::DeviceName(_) => {}
+            MetaMessage::DeviceName(device_name) => {
+              info!("DeviceName: {}", String::from_utf8_lossy(device_name));
+            }
             MetaMessage::MidiChannel(_) => {}
             MetaMessage::MidiPort(_) => {}
-            MetaMessage::EndOfTrack => {}
+            MetaMessage::EndOfTrack => {
+              info!("End of Tradck.");
+            }
             MetaMessage::Tempo(tempo) => {
               info!("Tempo: {}", tempo);
             }
