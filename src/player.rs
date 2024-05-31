@@ -123,6 +123,7 @@ impl <'a> TrackPlayer<'a> {
   fn done(&self) -> bool {
     self.current_idx >= self.track.len()
   }
+
   fn process(&mut self, ticks: usize, sink: &mut Sink) -> anyhow::Result<()> {
     let track = self.track;
     if self.done() {
@@ -202,7 +203,8 @@ impl <'a> TrackPlayer<'a> {
             MetaMessage::MidiChannel(_) => {}
             MetaMessage::MidiPort(_) => {}
             MetaMessage::EndOfTrack => {
-              info!("End of Tradck.");
+              self.current_idx = self.track.len();
+              return Ok(());
             }
             MetaMessage::Tempo(tempo) => {
               info!("Tempo: {}", tempo);
